@@ -1,0 +1,1624 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>𓂀 Tripple Dice — สมบัติฟาโรห์</title>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{--gold:#ffe2a6;--gold2:#e3ae42;--sand:#f6e9cd;--turq:#5aeed7;--blue:#5292e8;--rose:#f2957a}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{font-family:"Trebuchet MS","Segoe UI",system-ui,-apple-system,"Noto Sans Thai",sans-serif;background:#05040a;color:var(--sand);user-select:none}
+#defs{position:absolute;width:0;height:0;overflow:hidden}
+
+/* ============== BACKGROUND ============== */
+#bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+#bg>*{position:absolute;pointer-events:none}
+.sky{inset:0;background:linear-gradient(180deg,#05051a 0%,#191030 19%,#452141 42%,#894434 62%,#ce8042 80%,#f5cb7e 100%);animation:skyS 52s ease-in-out infinite alternate}
+@keyframes skyS{0%{filter:hue-rotate(0) brightness(1)}100%{filter:hue-rotate(-15deg) brightness(1.17)}}
+.stars{inset:0;background-image:
+ radial-gradient(1.9px 1.9px at 11% 12%,#fff,transparent),radial-gradient(1.5px 1.5px at 30% 7%,#ffeec2,transparent),
+ radial-gradient(2.1px 2.1px at 56% 16%,#fff,transparent),radial-gradient(1.4px 1.4px at 72% 6%,#d4e8ff,transparent),
+ radial-gradient(1.9px 1.9px at 86% 20%,#fff,transparent),radial-gradient(1.4px 1.4px at 20% 26%,#ffeec2,transparent),
+ radial-gradient(1.7px 1.7px at 44% 30%,#fff,transparent),radial-gradient(1.4px 1.4px at 64% 27%,#d4e8ff,transparent);
+ animation:twk 6.5s ease-in-out infinite}
+@keyframes twk{0%,100%{opacity:.25}50%{opacity:.97}}
+.sun{left:50%;top:22%;width:min(44vh,62vw);height:min(44vh,62vw);transform:translate(-50%,-50%);border-radius:50%;
+ background:radial-gradient(circle,#fffbe8 0%,#ffda84 26%,rgba(255,182,70,.26) 52%,rgba(255,150,46,0) 72%);animation:sunB 12s ease-in-out infinite}
+@keyframes sunB{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.78}50%{transform:translate(-50%,-50%) scale(1.1);opacity:1}}
+.pyr{bottom:12%;width:100%;height:30%;opacity:.48;background-repeat:repeat-x;background-position:0 bottom;background-size:520px 100%;
+ background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 520 200'><polygon points='60,200 160,40 260,200' fill='%230c0716'/><polygon points='230,200 320,90 410,200' fill='%23130a1c'/><polygon points='400,200 470,120 520,200' fill='%230c0716'/></svg>");animation:pyD 180s linear infinite}
+@keyframes pyD{from{background-position-x:0}to{background-position-x:-520px}}
+.dune{bottom:0;width:100%;background-repeat:repeat-x;background-position:0 bottom}
+.d1{height:17%;background-size:640px 100%;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 160'><path d='M0,90 Q160,30 320,88 T640,86 L640,160 L0,160Z' fill='%235c3c1d'/></svg>");animation:dnA 86s linear infinite}
+.d2{height:11%;background-size:480px 100%;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 480 120'><path d='M0,70 Q120,18 240,68 T480,64 L480,120 L0,120Z' fill='%23392410'/></svg>");animation:dnB 53s linear infinite}
+.d3{height:6%;background-size:360px 100%;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 360 100'><path d='M0,56 Q90,14 180,54 T360,50 L360,100 L0,100Z' fill='%231d1106'/></svg>");animation:dnC 32s linear infinite}
+@keyframes dnA{from{background-position-x:0}to{background-position-x:-640px}}
+@keyframes dnB{from{background-position-x:0}to{background-position-x:-480px}}
+@keyframes dnC{from{background-position-x:0}to{background-position-x:-360px}}
+.grain{inset:0;opacity:.03;background-image:linear-gradient(0deg,transparent 96%,#ffe2a6 96%),linear-gradient(90deg,transparent 96%,#ffe2a6 96%);background-size:48px 48px}
+.vig{inset:0;background:radial-gradient(ellipse at 50% 45%,transparent 40%,rgba(0,0,0,.55) 100%)}
+.dust{border-radius:50%;background:rgba(255,235,190,.6);filter:blur(1px);animation:dustF linear infinite}
+@keyframes dustF{0%{transform:translate(0,0);opacity:0}12%{opacity:.9}100%{transform:translate(-74vw,-27vh);opacity:0}}
+.gly{font-size:clamp(13px,2.3vh,25px);opacity:.1;color:#ffe2a6;animation:drift 26s ease-in-out infinite}
+@keyframes drift{0%,100%{transform:translate(0,0) rotate(-7deg)}50%{transform:translate(17px,-27px) rotate(9deg)}}
+@media(prefers-reduced-motion:reduce){#bg *{animation:none!important}}
+
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;z-index:5}
+.hidden{display:none!important}
+
+/* ============== CONTROLS ============== */
+.btn{position:relative;overflow:hidden;border:1.5px solid rgba(255,226,166,.55);border-radius:15px;cursor:pointer;
+ background:linear-gradient(180deg,rgba(96,74,30,.92),rgba(28,20,7,.95));backdrop-filter:blur(7px);
+ color:var(--gold);font-weight:800;font-size:clamp(12px,1.85vh,16px);padding:.62em 1.05em;transition:.16s;font-family:inherit;
+ box-shadow:0 6px 18px rgba(0,0,0,.52),inset 0 1px 0 rgba(255,255,255,.2)}
+.btn::after{content:"";position:absolute;top:0;left:-130%;width:55%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.26),transparent);animation:shine 5.5s linear infinite}
+@keyframes shine{0%{left:-130%}55%{left:160%}100%{left:160%}}
+.btn:hover{transform:translateY(-2px);border-color:var(--gold);box-shadow:0 10px 28px rgba(255,200,96,.36)}
+.btn:active{transform:translateY(1px)}
+.btn.gold{background:linear-gradient(180deg,#fff1c2,#e2ad40);color:#291b03;border-color:#fff9e2}
+.btn.gold:hover{background:linear-gradient(180deg,#fffbea,#edbc4d)}
+.btn.gold.rdy{animation:rdyG 1.25s ease-in-out infinite}
+@keyframes rdyG{0%,100%{box-shadow:0 0 12px rgba(255,210,110,.5)}50%{box-shadow:0 0 36px rgba(255,236,168,.98)}}
+.btn:disabled{opacity:.3;cursor:not-allowed;transform:none;box-shadow:none;animation:none}
+.btn.sm{font-size:clamp(10px,1.45vh,13px);padding:.4em .66em;border-radius:11px}
+.btn.chip{padding:.3em .76em;border-radius:999px;font-size:clamp(11px,1.65vh,15px)}
+.btn.chip.on{background:linear-gradient(180deg,#fff1c2,#e2ad40);color:#291b03}
+input[type=text]{background:rgba(14,10,4,.82);border:1.5px solid rgba(255,226,166,.4);color:var(--gold);border-radius:12px;
+ padding:.6em .8em;font-size:clamp(13px,2vh,17px);font-family:inherit;text-align:center;outline:none;width:100%}
+input[type=text]:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(255,226,166,.18)}
+input::placeholder{color:rgba(246,233,205,.34)}
+
+/* ============== MENU ============== */
+#menu{align-items:center;justify-content:center;gap:.75vh;padding:1.7vh}
+.title{font-size:clamp(24px,6vh,58px);font-weight:900;line-height:1;text-align:center;letter-spacing:2px;
+ background:linear-gradient(180deg,#fffefa,#ffe2a6 42%,#b3801a);-webkit-background-clip:text;background-clip:text;color:transparent;animation:tGl 4.5s ease-in-out infinite}
+@keyframes tGl{0%,100%{filter:drop-shadow(0 3px 0 #382806) drop-shadow(0 0 16px rgba(255,210,105,.3))}50%{filter:drop-shadow(0 3px 0 #382806) drop-shadow(0 0 40px rgba(255,228,145,.74))}}
+.subtitle{font-size:clamp(10px,1.6vh,15px);letter-spacing:6px;opacity:.7;text-align:center}
+.panel{background:linear-gradient(180deg,rgba(84,63,24,.58),rgba(12,9,3,.84));backdrop-filter:blur(16px) saturate(1.3);
+ border:1.5px solid rgba(255,226,166,.38);border-radius:22px;padding:1.6vh 1.8vh;
+ box-shadow:0 22px 58px rgba(0,0,0,.68),inset 0 1px 0 rgba(255,255,255,.17);max-width:min(450px,93vw);width:100%}
+.menuRow{display:flex;flex-direction:column;gap:.75vh;margin-top:.85vh}
+.hint{font-size:clamp(9px,1.35vh,12px);opacity:.64;text-align:center;line-height:1.5}
+.status{font-size:clamp(10px,1.45vh,13px);text-align:center;min-height:1.4em}
+.status.ok{color:var(--turq)}.status.err{color:#ff9d85}
+
+/* ============== SPHINX ============== */
+#sphinxWrap{display:flex;justify-content:center;align-items:flex-end;height:min(146px,18.5vh)}
+#sphinx{width:min(272px,60vw);height:auto;filter:drop-shadow(0 12px 22px rgba(0,0,0,.64));animation:sphF 5.4s ease-in-out infinite}
+@keyframes sphF{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+#sphinx *{transform-box:fill-box}
+#sxHead{transform-origin:50% 100%;animation:sxNod 4.6s ease-in-out infinite}
+@keyframes sxNod{0%,100%{transform:rotate(-2.2deg)}50%{transform:rotate(2.2deg) translateY(-2px)}}
+#sxTail{transform-origin:0% 100%;animation:sxTl 2.8s ease-in-out infinite}
+@keyframes sxTl{0%,100%{transform:rotate(-16deg)}50%{transform:rotate(13deg)}}
+.sxEye{transform-origin:50% 50%;animation:sxBl 5.4s infinite}
+@keyframes sxBl{0%,91%,100%{transform:scaleY(1)}94%{transform:scaleY(.06)}}
+#sxEarL{transform-origin:100% 100%;animation:sxEL 3.6s ease-in-out infinite}
+#sxEarR{transform-origin:0% 100%;animation:sxER 3.6s ease-in-out infinite}
+@keyframes sxEL{0%,85%,100%{transform:rotate(0)}90%{transform:rotate(-12deg)}}
+@keyframes sxER{0%,85%,100%{transform:rotate(0)}90%{transform:rotate(12deg)}}
+#sxChest{transform-origin:50% 100%;animation:sxBr 3.6s ease-in-out infinite}
+@keyframes sxBr{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.035)}}
+.sxSpark{transform-origin:50% 50%;animation:sxSp 3s ease-in-out infinite}
+.sxSpark:nth-of-type(2){animation-delay:1s}.sxSpark:nth-of-type(3){animation-delay:2s}
+@keyframes sxSp{0%,100%{opacity:0;transform:scale(.3)}50%{opacity:1;transform:scale(1.2) rotate(50deg)}}
+#sxAura{transform-origin:50% 50%;animation:sxAu 8s linear infinite;opacity:.45}
+@keyframes sxAu{to{transform:rotate(360deg)}}
+
+/* ============== LOBBY ============== */
+#lobby{align-items:center;justify-content:center;gap:1vh;padding:2vh}
+.codeBox{font-size:clamp(26px,6vh,54px);font-weight:900;letter-spacing:12px;color:#fffefa;text-align:center;text-shadow:0 0 30px rgba(255,228,145,.64)}
+.plist{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin:1vh 0;min-height:3vh}
+.pchip{background:rgba(68,51,20,.78);border:1px solid rgba(255,226,166,.44);border-radius:999px;padding:.3em .85em;font-size:clamp(11px,1.65vh,15px)}
+.pchip.off{opacity:.42;text-decoration:line-through}
+
+/* ============== GAME ============== */
+#game{padding:4px 5px 5px;gap:3px}
+#hud{display:flex;align-items:center;gap:4px;flex:0 0 auto}
+#hud .ht{font-weight:900;font-size:clamp(9px,1.6vh,15px);background:linear-gradient(180deg,#fffefa,#ffe2a6,#b3801a);-webkit-background-clip:text;background-clip:text;color:transparent;white-space:nowrap}
+#hud .hm{flex:1;text-align:center;font-size:clamp(8px,1.4vh,13px)}
+.pill{background:rgba(66,50,20,.74);border:1px solid rgba(255,226,166,.34);border-radius:999px;padding:.13em .6em;display:inline-block;margin:0 .1em;white-space:nowrap}
+.pill.hot{background:linear-gradient(180deg,#fff1c2,#e2ad40);color:#291b03;border-color:#fff9e2;font-weight:800}
+.pill.tq{background:rgba(90,238,215,.2);border-color:rgba(90,238,215,.52);color:#b2f8ec}
+#banner{flex:0 0 auto;text-align:center;font-size:clamp(11px,1.9vh,18px);font-weight:800;color:#fffbee;min-height:2vh;
+ text-shadow:0 0 18px rgba(255,210,105,.74);padding:0 5px}
+#banner.pop{animation:bPop .45s cubic-bezier(.34,1.56,.64,1)}
+@keyframes bPop{0%{transform:scale(.72);opacity:0}60%{transform:scale(1.09)}100%{transform:scale(1);opacity:1}}
+
+#opps{flex:1 1 auto;display:grid;gap:6px;min-height:0}
+.pcol{min-width:0;min-height:0;display:flex;flex-direction:column;align-items:center;gap:1px;position:relative;overflow:hidden;
+ background:linear-gradient(180deg,rgba(90,68,28,.5),rgba(10,7,2,.78));backdrop-filter:blur(11px);
+ border:1.5px solid rgba(255,226,166,.24);border-radius:17px;padding:5px 4px;transition:.25s;
+ box-shadow:0 9px 26px rgba(0,0,0,.54),inset 0 1px 0 rgba(255,255,255,.13)}
+.pcol.turn{border-color:var(--gold);animation:turnP 1.5s ease-in-out infinite}
+@keyframes turnP{0%,100%{box-shadow:0 0 16px rgba(255,210,110,.45)}50%{box-shadow:0 0 44px rgba(255,210,110,.85)}}
+.pcol.rank1{border-color:#ffe9ad;background:linear-gradient(180deg,rgba(168,124,35,.66),rgba(23,16,4,.82))}
+.pcol.off{opacity:.5}
+.rays{position:absolute;inset:-45%;background:conic-gradient(from 0deg,rgba(255,228,145,.3) 0 8deg,transparent 8deg 30deg);animation:spinR 9s linear infinite;pointer-events:none;opacity:.5}
+@keyframes spinR{to{transform:rotate(360deg)}}
+.crown{position:absolute;top:1px;right:6px;font-size:clamp(13px,2.2vh,22px);animation:bPop .5s;z-index:3}
+.pname{font-size:clamp(9px,1.45vh,15px);font-weight:800;color:#fffbee;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;z-index:2}
+.pmeta{font-size:clamp(8px,1.25vh,12.5px);opacity:.92;white-space:nowrap;z-index:2}
+.pmeta b{color:var(--gold)}
+.rowc{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;z-index:2}
+.arena{display:flex;gap:4px;justify-content:center;align-items:center;padding:3px 6px;border-radius:12px;
+ background:rgba(0,0,0,.32);border:1px solid rgba(255,226,166,.18);transition:.3s}
+.arena.lit{background:rgba(255,210,110,.19);border-color:rgba(255,226,166,.7);box-shadow:inset 0 0 22px rgba(255,210,110,.42)}
+.handTag{font-size:clamp(8px,1.3vh,13px);font-weight:800;color:#a8f7eb;min-height:1.05em;text-align:center;z-index:2}
+.handTag.show{animation:slUp .4s ease both}
+@keyframes slUp{from{transform:translateY(6px);opacity:0}to{transform:translateY(0);opacity:1}}
+.rankRow{display:flex;align-items:center;gap:5px;min-height:1.25em;z-index:2}
+.rbadge{font-size:clamp(9px,1.5vh,14px);font-weight:900;padding:.03em .5em;border-radius:999px;
+ background:linear-gradient(180deg,#fff1c2,#d29e30);color:#291b03;animation:rkP .55s cubic-bezier(.34,1.7,.5,1) both}
+.rbadge.r2{background:linear-gradient(180deg,#f0f2f6,#9ba4af)}
+.rbadge.r3{background:linear-gradient(180deg,#ecbd8f,#a57246);color:#211303}
+.rbadge.r4{background:linear-gradient(180deg,#948f81,#4b4841);color:#eee}
+@keyframes rkP{0%{transform:scale(0) rotate(-25deg)}70%{transform:scale(1.3) rotate(7deg)}100%{transform:scale(1)}}
+.ptsTag{font-size:clamp(10px,1.7vh,16px);font-weight:900;color:#ffe085;animation:rkP .5s .16s cubic-bezier(.34,1.7,.5,1) both}
+.poolBox{flex:1 1 auto;display:flex;align-items:center;justify-content:center;width:100%;min-height:0;z-index:2}
+.poolRow{display:flex;gap:4px;flex-wrap:wrap;justify-content:center;align-content:center;width:100%}
+.leftTag{font-size:clamp(7px,1.1vh,11.5px);opacity:.62;z-index:2}
+
+/* ============== MY PANEL ============== */
+#mine{flex:0 0 auto;display:flex;flex-direction:column;gap:3px;align-items:center;position:relative;
+ background:linear-gradient(180deg,rgba(26,100,94,.38),rgba(7,10,5,.88));backdrop-filter:blur(14px);
+ border:2px solid rgba(90,238,215,.52);border-radius:20px;padding:5px 8px 6px;
+ box-shadow:0 -12px 36px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,255,255,.15)}
+#mine.turn{border-color:var(--gold);animation:turnP 1.5s ease-in-out infinite}
+#myHead{display:flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:center;font-size:clamp(9px,1.4vh,13px)}
+#myHead b{color:var(--gold)}
+#myBattle{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:center}
+#myTitle{font-size:clamp(10px,1.55vh,14px);font-weight:800;color:#fffbee;text-align:center;line-height:1.25}
+#myRow{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;align-items:center;width:100%}
+#myBtns{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;align-items:center}
+
+/* ============== DICE ============== */
+.dieBox{flex:0 0 auto;position:relative;line-height:0;border-radius:22%;transition:transform .15s,box-shadow .15s;
+ filter:drop-shadow(0 2px 4px rgba(0,0,0,.58))}
+.dieBox svg{display:block;width:100%;height:100%}
+.dieBox.pick{cursor:pointer}
+.dieBox.pick:hover{transform:translateY(-6px) scale(1.07);filter:drop-shadow(0 8px 12px rgba(0,0,0,.62))}
+.dieBox.sel{box-shadow:0 0 0 3px var(--turq),0 8px 18px rgba(90,238,215,.62);transform:translateY(-10%) scale(1.08)}
+.dieBox.roll{animation:rollA .45s linear infinite}
+@keyframes rollA{0%{transform:rotate(0) scale(1)}25%{transform:rotate(90deg) scale(1.14)}50%{transform:rotate(180deg) scale(.92)}75%{transform:rotate(270deg) scale(1.14)}100%{transform:rotate(360deg) scale(1)}}
+.dieBox.settle{animation:setA .55s cubic-bezier(.2,1.5,.4,1) both}
+@keyframes setA{0%{transform:translateY(-30px) rotate(-150deg) scale(.4);opacity:0}70%{transform:translateY(3px) rotate(8deg) scale(1.1);opacity:1}100%{transform:translateY(0) rotate(0) scale(1)}}
+.dieBox.drop{animation:dropA .5s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes dropA{0%{transform:translateY(-34px) rotateY(90deg) scale(.45);opacity:0}100%{transform:translateY(0) rotateY(0) scale(1);opacity:1}}
+.dieBox.unveil{animation:unvA .65s ease both}
+@keyframes unvA{0%{transform:rotateY(0)}45%{transform:rotateY(90deg) scale(1.2)}100%{transform:rotateY(0) scale(1)}}
+.dieBox.glow{filter:drop-shadow(0 0 10px rgba(255,228,145,.98)) drop-shadow(0 2px 4px rgba(0,0,0,.5))}
+.slot{border:2px dashed rgba(255,226,166,.3);border-radius:22%;flex:0 0 auto}
+
+/* ============== CARDS ============== */
+.card{border-radius:14%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-weight:900;line-height:1;
+ border:1.5px solid rgba(66,48,14,.9);background:linear-gradient(160deg,#fffefa,#f0e3bc);color:#932315;
+ box-shadow:0 3px 9px rgba(0,0,0,.54);overflow:hidden}
+.card.back{background:linear-gradient(160deg,#5085d0,#112859);color:var(--gold);border-color:var(--gold2)}
+.card.back::after{content:"𓋹"}
+.card.joker{color:#0c8776}
+.card.flip{animation:cFlip .7s cubic-bezier(.3,1.3,.5,1) both}
+@keyframes cFlip{0%{transform:rotateY(0)}50%{transform:rotateY(90deg) scale(1.24)}100%{transform:rotateY(0) scale(1)}}
+.card.hit{box-shadow:0 0 24px rgba(134,235,186,.98);border-color:#86ebba}
+/* แถบเลือกไพ่ — บางและไม่บังเต๋า */
+#cardStrip{display:flex;gap:6px;justify-content:center;align-items:center;flex-wrap:nowrap;width:100%}
+.cslot{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;transition:.15s;padding:3px 4px;border-radius:12px;
+ border:1.5px solid transparent}
+.cslot:hover{background:rgba(255,226,166,.12);transform:translateY(-4px)}
+.cslot.on{background:rgba(90,238,215,.16);border-color:var(--turq);transform:translateY(-5px)}
+.cslot .card{box-shadow:0 4px 10px rgba(0,0,0,.55)}
+.cslot.on .card{box-shadow:0 0 0 3px var(--turq),0 6px 14px rgba(0,0,0,.5)}
+.cname{font-size:clamp(7.5px,1.1vh,11px);opacity:.75;white-space:nowrap}
+#cardDesc{font-size:clamp(9px,1.35vh,13px);color:#b2f8ec;text-align:center;min-height:1.2em;font-weight:700}
+
+/* ============== OVERLAY ============== */
+.overlay{position:fixed;inset:0;background:rgba(3,2,1,.88);backdrop-filter:blur(10px);z-index:30;display:flex;align-items:center;justify-content:center;padding:2vh}
+.sheet{background:linear-gradient(180deg,rgba(88,66,26,.96),rgba(12,8,2,.985));border:1.5px solid rgba(255,226,166,.48);
+ border-radius:22px;padding:1.6vh;max-width:min(840px,96vw);width:100%;max-height:94vh;overflow:auto;box-shadow:0 28px 70px rgba(0,0,0,.8);animation:bPop .4s}
+.sheet h2{color:var(--gold);font-size:clamp(15px,2.5vh,24px);text-align:center;margin-bottom:.8vh}
+table{width:100%;border-collapse:collapse;font-size:clamp(9px,1.5vh,14px)}
+th,td{border:1px solid rgba(255,226,166,.22);padding:.32em .38em;text-align:center}
+th{background:rgba(92,69,26,.86);color:var(--gold)}
+tr.me td{background:rgba(90,238,215,.15)}
+.ok{color:#86ebba}.no{color:#ff9d85}
+.sheet p,.sheet li{font-size:clamp(10px,1.5vh,14px);line-height:1.6;margin:.3em 0}
+.sheet li{margin-left:1.1em}
+#toast{position:fixed;bottom:3vh;left:50%;transform:translateX(-50%);background:rgba(58,43,15,.97);border:1px solid var(--gold2);
+ color:var(--gold);padding:.55em 1em;border-radius:12px;z-index:70;font-size:clamp(11px,1.65vh,15px);opacity:0;transition:.3s;pointer-events:none;max-width:90vw;text-align:center}
+#toast.on{opacity:1}
+.fx{position:fixed;pointer-events:none;z-index:60;font-weight:900;font-size:clamp(15px,2.4vh,25px);color:#ffe085;
+ text-shadow:0 2px 10px rgba(0,0,0,.9);animation:fxUp 1.2s ease-out forwards}
+@keyframes fxUp{0%{transform:translateY(0) scale(.5);opacity:0}18%{opacity:1;transform:translateY(-8px) scale(1.28)}100%{transform:translateY(-86px) scale(1);opacity:0}}
+.cdown{display:inline-block;min-width:1.5em;font-weight:900;color:var(--turq)}
+</style>
+</head>
+<body>
+
+<svg id="defs" xmlns="http://www.w3.org/2000/svg"><defs>
+  <linearGradient id="gDieW" x1="0" y1="0" x2="0.65" y2="1">
+    <stop offset="0" stop-color="#fffffc"/><stop offset="46%" stop-color="#f8efd8"/><stop offset="100%" stop-color="#cdb684"/>
+  </linearGradient>
+  <linearGradient id="gDieB" x1="0" y1="0" x2="0.65" y2="1">
+    <stop offset="0" stop-color="#bee0ff"/><stop offset="46%" stop-color="#4179cc"/><stop offset="100%" stop-color="#102c60"/>
+  </linearGradient>
+  <linearGradient id="gHide" x1="0" y1="0" x2="0.65" y2="1">
+    <stop offset="0" stop-color="#705738"/><stop offset="100%" stop-color="#1e1608"/>
+  </linearGradient>
+</defs></svg>
+
+<div id="bg">
+  <div class="sky"></div><div class="stars"></div><div class="sun"></div><div class="pyr"></div>
+  <div class="dune d1"></div><div class="dune d2"></div><div class="dune d3"></div>
+  <div class="grain"></div><div class="vig"></div>
+  <div class="gly" style="left:5%;top:12%">𓂀</div>
+  <div class="gly" style="right:7%;top:19%;animation-delay:-5s">𓁿</div>
+  <div class="gly" style="left:9%;bottom:28%;animation-delay:-9s">🪲</div>
+  <div class="gly" style="right:10%;bottom:33%;animation-delay:-13s">🏺</div>
+  <div class="gly" style="left:46%;top:4%;animation-delay:-7s">𓆣</div>
+  <div class="gly" style="left:79%;top:43%;animation-delay:-3s">𓋹</div>
+</div>
+
+<!-- ================= MENU ================= -->
+<div id="menu" class="screen">
+  <div class="title">𓂀 TRIPPLE DICE 𓂀</div>
+  <div class="subtitle">สมบัติแห่งฟาโรห์</div>
+  <div id="sphinxWrap">
+  <svg id="sphinx" viewBox="0 0 360 220" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="sBody" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe29e"/><stop offset="55%" stop-color="#e7ae48"/><stop offset="100%" stop-color="#b17c1c"/></linearGradient>
+      <linearGradient id="sLeg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffecbd"/><stop offset="100%" stop-color="#dfa943"/></linearGradient>
+      <linearGradient id="sFace" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff4d4"/><stop offset="100%" stop-color="#f0c976"/></linearGradient>
+      <linearGradient id="sNem" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5896ea"/><stop offset="55%" stop-color="#2c5eae"/><stop offset="100%" stop-color="#143571"/></linearGradient>
+      <linearGradient id="sGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff8de"/><stop offset="100%" stop-color="#d7a437"/></linearGradient>
+      <radialGradient id="sAura" cx="50%" cy="50%"><stop offset="0" stop-color="rgba(255,228,145,.32)"/><stop offset="100%" stop-color="rgba(255,228,145,0)"/></radialGradient>
+    </defs>
+    <ellipse id="sxAura" cx="180" cy="110" rx="162" ry="102" fill="url(#sAura)"/>
+    <ellipse cx="180" cy="201" rx="148" ry="12" fill="rgba(0,0,0,.44)"/>
+    <g id="sxTail" transform="translate(304,174)">
+      <path d="M0,0 C34,-6 50,-30 44,-58" stroke="#c08c26" stroke-width="11" fill="none" stroke-linecap="round"/>
+      <path d="M0,0 C34,-6 50,-30 44,-58" stroke="#eeba50" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <path d="M44,-64 q11,7 0,16 q-11,-9 0,-16Z" fill="url(#sGold)"/>
+    </g>
+    <ellipse cx="278" cy="153" rx="43" ry="45" fill="#d8a13a"/>
+    <ellipse cx="278" cy="147" rx="25" ry="27" fill="#ecb750" opacity=".7"/>
+    <g id="sxChest">
+      <path d="M118,197 L118,134 Q118,110 158,108 L268,108 Q306,113 306,153 L306,197 Z" fill="url(#sBody)"/>
+      <path d="M118,197 L118,134 Q118,110 158,108 L202,108 L202,197 Z" fill="#f4c569" opacity=".55"/>
+      <path d="M120,179 h184" stroke="#a8761b" stroke-width="5" opacity=".36"/>
+      <path d="M150,110 q27,31 54,0" fill="none" stroke="#2c5eae" stroke-width="8" stroke-linecap="round"/>
+      <path d="M157,112 q20,23 40,0" fill="none" stroke="#5aeed7" stroke-width="4" stroke-linecap="round" opacity=".85"/>
+      <circle cx="177" cy="131" r="8" fill="#5aeed7" stroke="#fff8de" stroke-width="2.2"/>
+    </g>
+    <path d="M246,112 q42,14 46,46 q-32,-9 -46,-46Z" fill="#2c5eae" opacity=".85"/>
+    <path d="M248,126 q36,13 40,36 q-28,-8 -40,-36Z" fill="#5aeed7" opacity=".6"/>
+    <path d="M250,138 q28,11 30,28 q-22,-7 -30,-28Z" fill="#ffe29e" opacity=".55"/>
+    <g id="sxLegs">
+      <rect x="66" y="161" width="124" height="26" rx="13" fill="#d9a33c"/>
+      <ellipse cx="72" cy="174" rx="19" ry="14" fill="#f5da9c"/>
+      <path d="M62,170 h10 M62,177 h10" stroke="#b8811d" stroke-width="2.2" stroke-linecap="round"/>
+      <rect x="48" y="171" width="134" height="26" rx="13" fill="url(#sLeg)"/>
+      <ellipse cx="54" cy="184" rx="20" ry="14" fill="#fff7da"/>
+      <path d="M44,179 h11 M44,186 h11 M44,193 h11" stroke="#b8811d" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M92,171 h76" stroke="#fff6d8" stroke-width="2.5" opacity=".5" stroke-linecap="round"/>
+    </g>
+    <g id="sxHead">
+      <path d="M176,16 C120,16 94,56 94,94 L94,130 L126,148 L138,96 L214,96 L226,148 L258,130 L258,94 C258,56 232,16 176,16Z" fill="url(#sNem)"/>
+      <g stroke="url(#sGold)" stroke-width="5.5" opacity=".95" stroke-linecap="round">
+        <path d="M103,72 L109,128"/><path d="M117,58 L121,122"/><path d="M131,48 L134,112"/>
+        <path d="M249,72 L243,128"/><path d="M235,58 L231,122"/><path d="M221,48 L218,112"/>
+      </g>
+      <path d="M94,96 L258,96" stroke="#ffeeba" stroke-width="4" opacity=".6"/>
+      <path d="M176,28 q-13,-15 0,-24 q13,9 0,24Z" fill="#5aeed7" stroke="#0e6f62" stroke-width="1.6"/>
+      <circle cx="176" cy="10" r="6.5" fill="url(#sGold)"/><circle cx="174" cy="9" r="1.9" fill="#4a2a05"/>
+      <path id="sxEarL" d="M118,70 L104,38 L136,56 Z" fill="#ebb951" stroke="#b8811d" stroke-width="1.6"/>
+      <path id="sxEarR" d="M234,70 L248,38 L216,56 Z" fill="#ebb951" stroke="#b8811d" stroke-width="1.6"/>
+      <path d="M132,56 Q176,40 220,56 L220,106 Q176,130 132,106 Z" fill="url(#sFace)"/>
+      <ellipse cx="176" cy="88" rx="45" ry="35" fill="url(#sFace)"/>
+      <path d="M143,68 q15,-10 30,-3" stroke="#1d1206" stroke-width="4.2" fill="none" stroke-linecap="round"/>
+      <path d="M179,65 q15,-7 30,3" stroke="#1d1206" stroke-width="4.2" fill="none" stroke-linecap="round"/>
+      <g class="sxEye">
+        <ellipse cx="156" cy="81" rx="11.5" ry="10.5" fill="#fffffa"/>
+        <circle cx="158" cy="82" r="5.8" fill="#1d1206"/><circle cx="160" cy="79" r="2.2" fill="#fff"/>
+        <path d="M144,75 q12,-4 24,0" stroke="#1d1206" stroke-width="3.3" fill="none" stroke-linecap="round"/>
+        <path d="M143,87 q-7,3 -9,8" stroke="#1d1206" stroke-width="3" fill="none" stroke-linecap="round"/>
+      </g>
+      <g class="sxEye" style="animation-delay:.05s">
+        <ellipse cx="197" cy="81" rx="11.5" ry="10.5" fill="#fffffa"/>
+        <circle cx="199" cy="82" r="5.8" fill="#1d1206"/><circle cx="201" cy="79" r="2.2" fill="#fff"/>
+        <path d="M185,75 q12,-4 24,0" stroke="#1d1206" stroke-width="3.3" fill="none" stroke-linecap="round"/>
+        <path d="M210,87 q7,3 9,8" stroke="#1d1206" stroke-width="3" fill="none" stroke-linecap="round"/>
+      </g>
+      <path d="M176,88 q-5,10 0,13 q5,-3 0,-13Z" fill="#d9a63c" opacity=".85"/>
+      <path d="M161,108 q15,12 30,0" stroke="#8d5a10" stroke-width="3.6" fill="none" stroke-linecap="round"/>
+      <ellipse cx="143" cy="97" rx="9" ry="5.6" fill="#f2957a" opacity=".5"/>
+      <ellipse cx="210" cy="97" rx="9" ry="5.6" fill="#f2957a" opacity=".5"/>
+      <path d="M169,118 q7,26 7,34 q0,-8 7,-34Z" fill="url(#sNem)" stroke="#ffeeba" stroke-width="1.6"/>
+    </g>
+    <path class="sxSpark" d="M30,60 l3.6,10.5 l10.5,3.6 l-10.5,3.6 l-3.6,10.5 l-3.6,-10.5 l-10.5,-3.6 l10.5,-3.6Z" fill="#fff9e2"/>
+    <path class="sxSpark" d="M330,78 l3,8.5 l8.5,3 l-8.5,3 l-3,8.5 l-3,-8.5 l-8.5,-3 l8.5,-3Z" fill="#ffe2a6"/>
+    <path class="sxSpark" d="M322,172 l2.4,7 l7,2.4 l-7,2.4 l-2.4,7 l-2.4,-7 l-7,-2.4 l7,-2.4Z" fill="#5aeed7"/>
+  </svg>
+  </div>
+  <div class="panel">
+    <input type="text" id="nameIn" maxlength="12" placeholder="ใส่ชื่อผู้เล่น">
+    <div class="menuRow">
+      <button class="btn gold" id="bSolo" type="button">🏜️ เล่นคนเดียว (สู้กับบอท)</button>
+      <button class="btn" id="bHost" type="button">🏛️ สร้างห้อง (โฮสต์)</button>
+      <div style="display:flex;gap:6px">
+        <input type="text" id="codeIn" maxlength="5" placeholder="รหัส 5 ตัว" style="flex:1;text-transform:uppercase">
+        <button class="btn" id="bJoin" type="button">เข้าร่วม</button>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn sm" id="bRules" type="button" style="flex:1">📜 กติกา</button>
+        <button class="btn sm" id="bMusic" type="button" style="flex:1">🎵 เพลง: ปิด</button>
+      </div>
+    </div>
+    <div class="status" id="netStatus"></div>
+    <div class="hint">P2P เชื่อมตรง • ไม่ต้องรันเซิร์ฟเวอร์ • สูงสุด 10 คน</div>
+  </div>
+</div>
+
+<div id="soloPick" class="overlay hidden"><div class="sheet" style="max-width:min(430px,94vw)">
+  <h2>🤖 เลือกจำนวนบอท</h2>
+  <p style="text-align:center">แนะนำ <b>3 ตัว</b> (รวมคุณ = 4 คน คะแนน 6/3/1/0)</p>
+  <div id="botChips" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:1.2vh 0"></div>
+  <div id="botInfo" class="hint"></div>
+  <div style="display:flex;gap:8px;margin-top:1.3vh">
+    <button class="btn sm" id="bSoloCancel" type="button" style="flex:1">ยกเลิก</button>
+    <button class="btn gold" id="bSoloGo" type="button" style="flex:2">▶️ เริ่มเล่น</button>
+  </div>
+</div></div>
+
+<div id="lobby" class="screen hidden">
+  <div class="title" style="font-size:clamp(20px,4.2vh,38px)">𓋹 ห้องพีระมิด 𓋹</div>
+  <div class="panel">
+    <div class="hint">รหัสห้อง</div>
+    <div class="codeBox" id="lobbyCode">-----</div>
+    <div style="display:flex;gap:6px;margin-top:1vh">
+      <button class="btn sm" id="bCopyCode" type="button" style="flex:1">📋 คัดลอกรหัส</button>
+      <button class="btn sm" id="bCopyLink" type="button" style="flex:1">🔗 คัดลอกลิงก์</button>
+    </div>
+    <div class="plist" id="lobbyList"></div>
+    <div class="status" id="lobbyStatus"></div>
+    <div class="menuRow">
+      <button class="btn gold hidden" id="bStart" type="button">▶️ เริ่มเกม</button>
+      <button class="btn sm hidden" id="bAddBot" type="button">🤖 เพิ่มบอท 1 ตัว</button>
+      <button class="btn sm" id="bLeave" type="button">ออกจากห้อง</button>
+    </div>
+  </div>
+</div>
+
+<div id="game" class="screen hidden">
+  <div id="hud">
+    <div class="ht">𓂀 TRIPPLE DICE</div>
+    <div class="hm" id="hudMid"></div>
+    <button class="btn sm" id="bRules2" type="button">📜</button>
+    <button class="btn sm" id="bMusic2" type="button">🎵</button>
+  </div>
+  <div id="banner"></div>
+  <div id="opps"></div>
+  <div id="mine">
+    <div id="myHead"></div>
+    <div id="myBattle"></div>
+    <div id="myTitle"></div>
+    <div id="myRow"></div>
+    <div id="myBtns"></div>
+  </div>
+</div>
+
+<div id="summary" class="overlay hidden"><div class="sheet" id="summarySheet"></div></div>
+
+<div id="rules" class="overlay hidden"><div class="sheet">
+  <h2>📜 กติกา Tripple Dice</h2>
+  <ul>
+    <li><b>เต๋าเปิด 9 + เต๋าลับ 2</b> — เต๋าเปิดของทุกคนเห็นกันหมดตลอดเวลา, เต๋าลับ 🔵 เห็นเฉพาะเจ้าของ</li>
+    <li>ทอย → เปิดเผยเต๋าทุกคน → เลือก <b>ไพ่ทำนาย 1 ใบคว่ำไว้</b></li>
+    <li>K = มากกว่าเกณฑ์สูง • Q = ช่วงสูง • J = ช่วงกลาง • A = ช่วงต่ำ • Joker = 0</li>
+    <li>ทายถูก <b>×2</b> • ผิดได้เท่าเดิม • Joker ตรง <b>+50</b></li>
+    <li>ลง <b>ทีละ 3 ลูก</b> ตามลำดับ คนแรก = คนคะแนนสูงสุดของตาก่อนหน้า</li>
+    <li><b>ความใหญ่:</b> ①ตอง ②เรียง (123 234 345 456) ③คู่ ④เลขสูง — เท่ากันดูเลขรอง ถ้ายังเท่าอันดับเท่ากัน</li>
+    <li>เท่ากันแบ่งคะแนนครึ่ง คนถัดไปยังเป็นอันดับ 2 (ไม่เลื่อนเป็น 3)</li>
+    <li>3 ตา = 1 รอบใหญ่ → เปิดไพ่ • เล่น <b>4 รอบใหญ่</b> รวมมากสุดชนะ</li>
+  </ul>
+  <div id="ruleScale" style="margin-top:1vh"></div>
+  <div style="text-align:center;margin-top:1.3vh"><button class="btn gold" id="bCloseRules" type="button">ปิด</button></div>
+</div></div>
+
+<div id="toast"></div>
+
+<script>
+"use strict";
+
+/* ==================== UTIL ==================== */
+function $(id){ return document.getElementById(id); }
+function rnd(n){ return Math.floor(Math.random()*n); }
+function el(tag,cls,txt){ var e=document.createElement(tag); if(cls)e.className=cls; if(txt!==undefined&&txt!==null)e.textContent=txt; return e; }
+function toast(m){ var t=$('toast'); t.textContent=m; t.classList.add('on'); clearTimeout(t._tm); t._tm=setTimeout(function(){t.classList.remove('on');},2600); }
+function safe(fn){ try{ fn(); }catch(e){ console.error(e); toast('⚠️ '+e.message); } }
+function later(ms,fn){ return setTimeout(function(){ safe(fn); },ms); }
+function bind(id,fn){ var e=$(id); if(!e){console.warn('no btn',id);return;} e.addEventListener('click',function(ev){ev.preventDefault();safe(fn);}); }
+function fmt(x){ return String(Math.round(x*10)/10); }
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+
+/* ==================== AUDIO ==================== */
+var AC=null,MG=null,musicOn=false,musicTimer=null,musicStep=0;
+function ac(){
+  if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); MG=AC.createGain(); MG.gain.value=.85; MG.connect(AC.destination); }catch(e){ return null; } }
+  if(AC.state==='suspended'){ try{AC.resume();}catch(e){} }
+  return AC;
+}
+function tone(f,d,ty,v,dl,slide){
+  var c=ac(); if(!c) return;
+  ty=ty||'sine'; v=v||.14; dl=dl||0;
+  var t=c.currentTime+dl,o=c.createOscillator(),g=c.createGain();
+  o.type=ty; o.frequency.setValueAtTime(f,t);
+  if(slide) o.frequency.exponentialRampToValueAtTime(slide,t+d);
+  g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(v,t+.012); g.gain.exponentialRampToValueAtTime(.0001,t+d);
+  o.connect(g); g.connect(MG); o.start(t); o.stop(t+d+.05);
+}
+function noiz(d,v,dl){
+  var c=ac(); if(!c) return; d=d||.3; v=v||.13; dl=dl||0;
+  var n=Math.floor(c.sampleRate*d),b=c.createBuffer(1,n,c.sampleRate),a=b.getChannelData(0),i;
+  for(i=0;i<n;i++){ a[i]=(Math.random()*2-1)*Math.pow(1-i/n,2); }
+  var s=c.createBufferSource(); s.buffer=b;
+  var f=c.createBiquadFilter(); f.type='bandpass'; f.frequency.value=1500;
+  var g=c.createGain(); g.gain.value=v;
+  s.connect(f); f.connect(g); g.connect(MG); s.start(c.currentTime+dl);
+}
+var SFX={
+  click:function(){tone(700,.05,'square',.075);},
+  roll:function(){noiz(.6,.16); for(var i=0;i<9;i++) tone(280+Math.random()*520,.05,'triangle',.05,i*.06);},
+  settle:function(){noiz(.16,.11); tone(300,.1,'triangle',.1);},
+  place:function(){tone(450,.09,'triangle',.13); tone(670,.09,'triangle',.09,.05);},
+  card:function(){tone(900,.07,'sine',.11); tone(1200,.09,'sine',.08,.06);},
+  unveil:function(){tone(420,.35,'sine',.13,0,1100); noiz(.3,.07);},
+  scan:function(){tone(560,.09,'square',.07); tone(760,.09,'square',.06,.09);},
+  rank:function(i){tone(980-i*130,.22,'triangle',.14);},
+  coin:function(){tone(1180,.09,'square',.1); tone(1560,.13,'square',.08,.07);},
+  bonus:function(){var a=[659,784,988,1318,1568],i; for(i=0;i<a.length;i++) tone(a[i],.3,'square',.1,i*.08);},
+  fanfare:function(){var a=[523,523,659,784,1046,784,1046,1318],i; for(i=0;i<a.length;i++) tone(a[i],.34,'triangle',.13,i*.14);},
+  turn:function(){tone(740,.1,'sine',.1); tone(1050,.12,'sine',.07,.09);},
+  tick:function(){tone(900,.04,'square',.05);}
+};
+var SCALE=[261.63,277.18,329.63,349.23,392.00,415.30,493.88,523.25];
+var MELODY=[0,2,3,4,3,2,0,1,0,2,4,5,4,2,0,-1];
+function musicTick(){
+  var x=MELODY[musicStep%MELODY.length];
+  var f=SCALE[((x%8)+8)%8]*(x<0?.5:1);
+  tone(f,.42,'triangle',.048);
+  if(musicStep%4===0) tone(130.81,.7,'sine',.042);
+  if(musicStep%8===4) noiz(.12,.028);
+  musicStep++;
+}
+function setMusic(v){
+  musicOn=v; ac();
+  if(musicTimer){ clearInterval(musicTimer); musicTimer=null; }
+  if(v){ musicStep=0; musicTick(); musicTimer=setInterval(function(){safe(musicTick);},340); }
+  var a=$('bMusic'),b=$('bMusic2');
+  if(a) a.textContent='🎵 เพลง: '+(v?'เปิด':'ปิด');
+  if(b) b.textContent=v?'🎵':'🔇';
+}
+
+/* ==================== RULES ==================== */
+var EMO=['🐫','🐍','🦂','🪲','🦅','🐊','🐈','🦩','🐆','🦛'];
+var NAMES=['อานูบิส','รามเสส','คลีโอ','โฮรัส','เซติ','ไอซิส','ธอธ','บาสเตต','โอซิริส','เนเฟอร์'];
+var CARDS=['K','Q','J','A','JOKER'];
+var CF={K:'K',Q:'Q',J:'J',A:'A',JOKER:'★'};
+var CNAME={K:'คิง',Q:'ควีน',J:'แจ็ค',A:'เอซ',JOKER:'โจ๊ก'};
+
+function pointsTable(n){
+  if(n<2) return [0];
+  var raw=[n*(n-1)/2],i;
+  for(i=1;i<n;i++){ raw.push(raw[i-1]-(n-i)); }
+  var top=(n===4)?6:Math.round(1.5*n),out=[],j;
+  for(j=0;j<raw.length;j++){ out.push(Math.round(top*raw[j]/raw[0])); }
+  return out;
+}
+function cardRanges(n){
+  var M=3*pointsTable(n)[0];
+  function t(x){ return Math.max(1,Math.round(M*x/18)); }
+  var k=t(10),q=t(7),j=t(3);
+  return {
+    K:{min:k+1,max:Infinity,label:'> '+k, desc:'คิง — ทายว่าคะแนนรวม 3 ตาจะ "มากกว่า '+k+'"'},
+    Q:{min:q,max:k,label:q+'-'+k, desc:'ควีน — ทายว่าคะแนนรวมอยู่ในช่วง '+q+' ถึง '+k},
+    J:{min:j,max:q,label:j+'-'+q, desc:'แจ็ค — ทายว่าคะแนนรวมอยู่ในช่วง '+j+' ถึง '+q},
+    A:{min:1,max:j,label:'1-'+j, desc:'เอซ — ทายว่าคะแนนรวมอยู่ในช่วง 1 ถึง '+j},
+    JOKER:{min:0,max:0,label:'0', desc:'โจ๊ก — ทายว่าจะได้ 0 คะแนน! ถ้าตรงรับโบนัส +50'}
+  };
+}
+function cardHit(c,s,n){ var r=cardRanges(n)[c]; return r ? (s>=r.min && s<=r.max) : false; }
+function evalHand(v){
+  var s=v.slice().sort(function(a,b){return b-a;}),a=s[0],b=s[1],c=s[2];
+  if(a===b&&b===c) return {name:'👑 ตอง '+a,key:[4,a,0,0]};
+  var q=v.slice().sort(function(x,y){return x-y;});
+  if(q[1]===q[0]+1&&q[2]===q[1]+1) return {name:'🐍 เรียง '+q.join(''),key:[3,q[2],q[1],q[0]]};
+  if(a===b) return {name:'🪲 คู่ '+a,key:[2,a,c,0]};
+  if(b===c) return {name:'🪲 คู่ '+b,key:[2,b,a,0]};
+  return {name:'🏺 สูง '+a,key:[1,a,b,c]};
+}
+function cmpKey(x,y){ for(var i=0;i<4;i++){ if(x[i]!==y[i]) return x[i]-y[i]; } return 0; }
+function rankAward(entries,n){
+  var pts=pointsTable(n);
+  var sorted=entries.slice().sort(function(a,b){return cmpKey(b.key,a.key);});
+  var groups=[],i;
+  for(i=0;i<sorted.length;i++){
+    var last=groups[groups.length-1];
+    if(last && cmpKey(last[0].key,sorted[i].key)===0) last.push(sorted[i]);
+    else groups.push([sorted[i]]);
+  }
+  var out={},g,m;
+  for(g=0;g<groups.length;g++){
+    var base=(pts[g]!==undefined)?pts[g]:0;
+    for(m=0;m<groups[g].length;m++){ out[groups[g][m].id]={pts:base/groups[g].length,rank:g+1}; }
+  }
+  return out;
+}
+
+/* ==================== STATE ==================== */
+var ROLE='none',MYID=null,G=null,VIEW=null,SEL=[],CARDSEL=null;
+var peer=null,hostConn=null,ROOMCODE='';
+var autoNextTimer=null,autoNextDeadline=0;
+
+function newPlayer(id,name,isBot,idx){
+  return { id:id,name:name,emoji:EMO[idx%EMO.length],isBot:isBot,connected:true,dice:[],prediction:null,
+    subPts:[0,0,0],roundScore:0,total:0,lastHand:null,lastPts:null,lastRank:null,cardHit:null,conn:null,isHost:false };
+}
+function freshDice(){
+  var d=[],i;
+  for(i=0;i<11;i++){ d.push({id:i,v:1+rnd(6),secret:(i>=9),used:false,pr:0,revealed:false}); }
+  return d;
+}
+function hostInit(ps){
+  G={phase:'lobby',stage:0,seq:0,bigRound:1,subRound:1,maxRounds:4,players:ps,order:[],turnIdx:0,
+     banner:'',lastSub:null,summary:null,final:null,autoIn:0};
+}
+function P(id){ for(var i=0;i<G.players.length;i++){ if(G.players[i].id===id) return G.players[i]; } return null; }
+function NP(){ return G.players.length; }
+
+function startGame(){
+  var i;
+  for(i=0;i<G.players.length;i++){ G.players[i].total=0; G.players[i].emoji=EMO[i%EMO.length]; }
+  G.order=[];
+  for(i=0;i<G.players.length;i++){ G.order.push(G.players[i].id); }
+  G.bigRound=1;
+  beginBigRound();
+}
+function beginBigRound(){
+  clearAutoNext();
+  var i,p;
+  for(i=0;i<G.players.length;i++){
+    p=G.players[i];
+    p.dice=freshDice(); p.prediction=null; p.subPts=[0,0,0]; p.roundScore=0;
+    p.lastHand=null; p.lastPts=null; p.lastRank=null; p.cardHit=null;
+  }
+  G.subRound=1; G.lastSub=null; G.summary=null; G.phase='roll'; G.stage=0; G.autoIn=0;
+  G.banner='🎲 รอบใหญ่ที่ '+G.bigRound+' — ทอยเต๋า 11 ลูก!';
+  push();
+  later(1500,function(){
+    G.stage=1;
+    G.banner='👀 เต๋าทุกคนเปิดเผยแล้ว — ดูก่อนเลือกไพ่';
+    push();
+    later(2000,function(){
+      G.phase='predict';
+      G.banner='🃏 ดูเต๋าทั้งกระดานแล้วเลือกไพ่ทำนายของคุณ';
+      push(); botsPredict();
+    });
+  });
+}
+function botsPredict(){
+  for(var i=0;i<G.players.length;i++){
+    (function(p){
+      if(p.isBot||!p.connected){
+        later(1400+rnd(2200),function(){
+          if(G.phase!=='predict'||p.prediction) return;
+          var r=Math.random();
+          if(r<.34) p.prediction='J';
+          else if(r<.68) p.prediction='Q';
+          else if(r<.83) p.prediction='A';
+          else if(r<.95) p.prediction='K';
+          else p.prediction='JOKER';
+          push(); checkPredict();
+        });
+      }
+    })(G.players[i]);
+  }
+}
+function checkPredict(){
+  for(var i=0;i<G.players.length;i++){ if(!G.players[i].prediction) return; }
+  G.banner='✅ ทุกคนเลือกไพ่แล้ว — เริ่มลงเต๋า!';
+  push();
+  later(1000,function(){ G.phase='select'; computeOrder(); G.turnIdx=0; push(); nextTurn(); });
+}
+function computeOrder(){
+  if(!G.lastSub){
+    if(G.order.length===0){ for(var i=0;i<G.players.length;i++){ G.order.push(G.players[i].id); } }
+  }else{
+    var ls=G.lastSub;
+    G.order=G.order.slice().sort(function(a,b){ return (ls[b]||0)-(ls[a]||0); });
+  }
+}
+function curTurn(){ return G.order[G.turnIdx]; }
+function nextTurn(){
+  if(G.phase!=='select') return;
+  if(G.turnIdx>=G.order.length){ doDuel(); return; }
+  var p=P(curTurn());
+  if(!p){ G.turnIdx++; nextTurn(); return; }
+  G.banner='⚔️ ตาที่ '+G.subRound+'/3 — ตาของ '+p.emoji+' '+p.name;
+  push();
+  if(p.isBot||!p.connected){
+    later(1100+rnd(900),function(){
+      if(G.phase!=='select'||curTurn()!==p.id) return;
+      placeDice(p.id,botChoose(p));
+    });
+  }
+}
+function placeDice(pid,ids){
+  if(G.phase!=='select'||curTurn()!==pid) return;
+  var p=P(pid); if(!p) return;
+  var chosen=[],seen={},i;
+  for(i=0;i<ids.length;i++){
+    var d=p.dice[ids[i]];
+    if(d&&!d.used&&!seen[d.id]){ seen[d.id]=1; chosen.push(d); }
+  }
+  if(chosen.length!==3) return;
+  for(i=0;i<3;i++){ chosen[i].used=true; chosen[i].pr=G.subRound; }
+  G.seq++; G.turnIdx++;
+  push();
+  later(650,nextTurn);
+}
+function botChoose(p){
+  var av=[],i,j,k;
+  for(i=0;i<p.dice.length;i++){ if(!p.dice[i].used) av.push(p.dice[i]); }
+  if(av.length<3) return [];
+  var combos=[];
+  for(i=0;i<av.length;i++) for(j=i+1;j<av.length;j++) for(k=j+1;k<av.length;k++){
+    var st=[av[i],av[j],av[k]];
+    combos.push({set:st,ev:evalHand([st[0].v,st[1].v,st[2].v])});
+  }
+  combos.sort(function(a,b){ return cmpKey(a.ev.key,b.ev.key); });
+  var best=null;
+  for(i=0;i<G.players.length;i++){
+    var o=G.players[i];
+    if(o.id===p.id) continue;
+    var pl=[];
+    for(j=0;j<o.dice.length;j++){ if(o.dice[j].pr===G.subRound) pl.push(o.dice[j]); }
+    if(pl.length===3){
+      var vals=[];
+      for(k=0;k<3;k++){ vals.push((pl[k].secret&&!pl[k].revealed)?4:pl[k].v); }
+      var ev=evalHand(vals);
+      if(!best||cmpKey(ev.key,best)>0) best=ev.key;
+    }
+  }
+  var pick=null;
+  if(best){
+    for(i=0;i<combos.length;i++){ if(cmpKey(combos[i].ev.key,best)>0){ pick=combos[i]; break; } }
+    if(!pick||Math.random()>.82) pick=combos[0];
+  }else{
+    var idx=(G.subRound===3)?combos.length-1:Math.floor(combos.length*(.45+Math.random()*.32));
+    pick=combos[clamp(idx,0,combos.length-1)];
+  }
+  return [pick.set[0].id,pick.set[1].id,pick.set[2].id];
+}
+function doDuel(){
+  G.phase='duel'; G.stage=0;
+  G.banner='⚔️ ครบทุกคนแล้ว — เตรียมดวลความใหญ่!';
+  push();
+  later(1200,function(){
+    var i,j;
+    for(i=0;i<G.players.length;i++){
+      for(j=0;j<G.players[i].dice.length;j++){ if(G.players[i].dice[j].pr===G.subRound) G.players[i].dice[j].revealed=true; }
+    }
+    G.stage=1; G.banner='𓂀 เปิดเต๋าลับทั้งหมด!';
+    push();
+    later(1600,function(){
+      var a,b;
+      for(a=0;a<G.players.length;a++){
+        var pl=G.players[a],v=[];
+        for(b=0;b<pl.dice.length;b++){ if(pl.dice[b].pr===G.subRound) v.push(pl.dice[b].v); }
+        if(v.length===3) pl.lastHand=evalHand(v).name;
+      }
+      G.stage=2; G.banner='🔍 อ่านความใหญ่ของแต่ละมือ...';
+      push();
+      later(1700,function(){
+        var entries=[],x,y;
+        for(x=0;x<G.players.length;x++){
+          var pp=G.players[x],vv=[];
+          for(y=0;y<pp.dice.length;y++){ if(pp.dice[y].pr===G.subRound) vv.push(pp.dice[y].v); }
+          if(vv.length!==3) vv=[1,1,1];
+          entries.push({id:pp.id,key:evalHand(vv).key});
+        }
+        var res=rankAward(entries,NP());
+        G.lastSub={};
+        var winners=[],z;
+        for(z=0;z<G.players.length;z++){
+          var pz=G.players[z],r=res[pz.id];
+          pz.lastPts=r.pts; pz.lastRank=r.rank;
+          pz.subPts[G.subRound-1]=r.pts; pz.roundScore+=r.pts;
+          G.lastSub[pz.id]=r.pts;
+          if(r.rank===1) winners.push(pz);
+        }
+        var wt=[],w;
+        for(w=0;w<winners.length;w++){ wt.push(winners[w].emoji+' '+winners[w].name); }
+        G.stage=3;
+        G.banner='🏆 '+wt.join(' & ')+' ชนะตานี้! +'+fmt(winners[0].lastPts);
+        push();
+        later(3500,function(){
+          if(G.subRound<3){
+            G.subRound++; G.phase='select'; computeOrder(); G.turnIdx=0;
+            G.banner='➡️ ไปตาที่ '+G.subRound+'!';
+            push(); later(900,nextTurn);
+          } else finishBigRound();
+        });
+      });
+    });
+  });
+}
+function finishBigRound(){
+  G.phase='cardreveal'; G.stage=0;
+  G.banner='🃏 ถึงเวลาเปิดไพ่ทำนาย...';
+  push();
+  later(1500,function(){
+    var n=NP(),rows=[],hits=[],i;
+    for(i=0;i<G.players.length;i++){
+      var p=G.players[i];
+      if(!p.prediction) p.prediction='J';
+      var hit=cardHit(p.prediction,p.roundScore,n),fin;
+      if(hit&&p.prediction==='JOKER') fin=50;
+      else if(hit) fin=p.roundScore*2;
+      else fin=p.roundScore;
+      p.total+=fin; p.cardHit=hit;
+      if(hit) hits.push(p.emoji+p.name);
+      rows.push({id:p.id,name:p.name,emoji:p.emoji,sub:p.subPts.slice(),round:p.roundScore,
+                 card:p.prediction,hit:hit,final:fin,total:p.total});
+    }
+    G.stage=1;
+    G.banner=hits.length?('✨ ทายถูก: '+hits.join(', ')):'😵 รอบนี้ไม่มีใครทายถูก!';
+    computeOrder();
+    G.summary={rows:rows,round:G.bigRound,nextFirst:G.order[0],ranges:cardRanges(n)};
+    push();
+    later(2800,function(){
+      G.phase='summary';
+      G.banner='📜 สรุปผลรอบที่ '+G.bigRound;
+      push();
+      armAutoNext();   /* <<< บอท/คนหลุด = เริ่มรอบต่อไปอัตโนมัติ */
+    });
+  });
+}
+
+/* ---- auto advance : แก้บัคบอทไม่กดเริ่มรอบต่อไป ---- */
+function clearAutoNext(){
+  if(autoNextTimer){ clearInterval(autoNextTimer); autoNextTimer=null; }
+  autoNextDeadline=0;
+  if(G) G.autoIn=0;
+}
+function armAutoNext(){
+  clearAutoNext();
+  if(!G||G.phase!=='summary'||!G.summary) return;
+  var starter=P(G.summary.nextFirst);
+  var isAuto = (!starter) || starter.isBot || !starter.connected;
+  var secs = isAuto ? 6 : 30;     /* บอท 6 วิ • คนจริง 30 วิ (กันค้าง) */
+  autoNextDeadline = Date.now() + secs*1000;
+  G.autoIn = secs;
+  push();
+  autoNextTimer = setInterval(function(){
+    safe(function(){
+      if(!G||G.phase!=='summary'){ clearAutoNext(); return; }
+      var left = Math.ceil((autoNextDeadline - Date.now())/1000);
+      if(left<=0){ clearAutoNext(); nextBigRound(); return; }
+      if(left!==G.autoIn){ G.autoIn=left; push(); }
+    });
+  },400);
+}
+function nextBigRound(){
+  if(!G||G.phase!=='summary') return;
+  clearAutoNext();
+  if(G.bigRound>=G.maxRounds){
+    G.phase='end';
+    var f=[],i;
+    for(i=0;i<G.players.length;i++){
+      f.push({id:G.players[i].id,name:G.players[i].name,emoji:G.players[i].emoji,total:G.players[i].total});
+    }
+    f.sort(function(a,b){return b.total-a.total;});
+    G.final=f; G.banner='👑 จบเกม!';
+    push(); return;
+  }
+  G.bigRound++;
+  beginBigRound();
+}
+
+/* ==================== VIEW ==================== */
+function viewFor(pid){
+  var showAll=(G.phase==='cardreveal'||G.phase==='summary'||G.phase==='end');
+  var vp=[],i,j;
+  for(i=0;i<G.players.length;i++){
+    var p=G.players[i],dice=[];
+    for(j=0;j<p.dice.length;j++){
+      var d=p.dice[j];
+      /* เต๋าไม่ลับ = ทุกคนเห็นเสมอ | เต๋าลับ = เจ้าของเห็นเสมอ, คนอื่นเห็นเมื่อ revealed */
+      var hidden = d.secret && (p.id!==pid) && !d.revealed && !showAll;
+      dice.push({id:d.id,v:hidden?0:d.v,secret:d.secret,used:d.used,pr:d.pr,hidden:hidden});
+    }
+    vp.push({
+      id:p.id,name:p.name,emoji:p.emoji,isBot:p.isBot,connected:p.connected,
+      total:p.total,roundScore:p.roundScore,lastHand:p.lastHand,lastPts:p.lastPts,lastRank:p.lastRank,
+      hasPrediction:!!p.prediction,
+      prediction:(p.id===pid||showAll)?p.prediction:null,
+      cardHit:showAll?p.cardHit:null,
+      dice:dice
+    });
+  }
+  return {
+    phase:G.phase,stage:G.stage,seq:G.seq,bigRound:G.bigRound,subRound:G.subRound,maxRounds:G.maxRounds,
+    banner:G.banner,order:G.order.slice(),turnId:(G.phase==='select')?curTurn():null,
+    me:pid,summary:G.summary,final:G.final,n:NP(),ranges:cardRanges(NP()),code:ROOMCODE,autoIn:G.autoIn||0,players:vp
+  };
+}
+function push(){
+  if(ROLE==='client'||!G) return;
+  for(var i=0;i<G.players.length;i++){
+    var p=G.players[i],v=viewFor(p.id);
+    if(p.id===MYID){ VIEW=v; render(); }
+    else if(p.conn&&p.connected){ try{ p.conn.send({t:'state',s:v}); }catch(e){} }
+  }
+}
+function handleAction(pid,a){
+  if(ROLE==='client'||!G) return;
+  if(a.type==='predict'){
+    if(G.phase!=='predict') return;
+    var p=P(pid); if(!p||p.prediction) return;
+    if(CARDS.indexOf(a.card)<0) return;
+    p.prediction=a.card; push(); checkPredict();
+  }else if(a.type==='place'){ placeDice(pid,a.ids); }
+  else if(a.type==='next'){
+    if(G.phase==='summary' && G.summary && pid===G.summary.nextFirst) nextBigRound();
+  }
+}
+function act(a){
+  if(ROLE==='client'){ if(hostConn){ try{ hostConn.send({t:'action',a:a}); }catch(e){} } }
+  else handleAction(MYID,a);
+}
+
+/* ==================== DICE (SVG) ==================== */
+var PIPXY={
+  1:[[50,50]],
+  2:[[28,28],[72,72]],
+  3:[[28,28],[50,50],[72,72]],
+  4:[[28,28],[72,28],[28,72],[72,72]],
+  5:[[28,28],[72,28],[50,50],[28,72],[72,72]],
+  6:[[28,26],[28,50],[28,74],[72,26],[72,50],[72,74]]
+};
+function makeDie(d,px,extra){
+  var box=el('div','dieBox'+(extra?' '+extra:''));
+  box.style.width=px+'px'; box.style.height=px+'px';
+  var svg;
+  if(d.hidden||!d.v){
+    svg='<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'+
+        '<rect x="3" y="3" width="94" height="94" rx="22" fill="url(#gHide)" stroke="#93712a" stroke-width="3"/>'+
+        '<text x="50" y="71" text-anchor="middle" font-size="56" fill="#ffe2a6">&#x13080;</text></svg>';
+    box.title='เต๋าลับของผู้เล่นอื่น';
+  }else{
+    var pips=PIPXY[d.v]||[],s='',i;
+    var pc=d.secret?'#f6fbff':'#1c1207';
+    for(i=0;i<pips.length;i++){ s+='<circle cx="'+pips[i][0]+'" cy="'+pips[i][1]+'" r="10.8" fill="'+pc+'"/>'; }
+    svg='<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'+
+        '<rect x="3" y="3" width="94" height="94" rx="22" fill="url(#'+(d.secret?'gDieB':'gDieW')+')" '+
+        'stroke="'+(d.secret?'#cbe3fd':'#5d4513')+'" stroke-width="3"/>'+
+        '<rect x="11" y="10" width="78" height="34" rx="15" fill="#ffffff" opacity="'+(d.secret?'0.17':'0.34')+'"/>'+
+        s+'</svg>';
+    box.title='เต๋า '+d.v+(d.secret?' (ลับ — เห็นเฉพาะคุณ)':'');
+  }
+  box.innerHTML=svg;
+  return box;
+}
+function makeSlot(px){
+  var s=el('div','slot'); s.style.width=px+'px'; s.style.height=px+'px'; return s;
+}
+function makeCard(code,h,extra){
+  var cls='card'+(code==='JOKER'?' joker':'')+(extra?' '+extra:'');
+  var c=el('div',cls,CF[code]);
+  var w=Math.round(h*0.72);
+  c.style.width=w+'px'; c.style.height=h+'px';
+  c.style.fontSize=Math.round(h*0.46)+'px';
+  return c;
+}
+function makeBack(h,dim){
+  var c=el('div','card back');
+  c.style.width=Math.round(h*0.72)+'px'; c.style.height=h+'px'; c.style.fontSize=Math.round(h*0.46)+'px';
+  if(dim) c.style.opacity='.25';
+  return c;
+}
+function fxAt(node,txt,color){
+  if(!node) return;
+  var r=node.getBoundingClientRect();
+  var d=el('div','fx',txt);
+  if(color) d.style.color=color;
+  d.style.left=(r.left+r.width/2-20)+'px'; d.style.top=r.top+'px';
+  document.body.appendChild(d);
+  setTimeout(function(){ d.remove(); },1300);
+}
+
+/* ==================== SIZING ==================== */
+/* หาขนาดกล่องใหญ่สุดที่ใส่ครบ count ชิ้นในกรอบ w×h */
+function fitGrid(count,w,h,max,min,gap){
+  for(var s=max;s>=min;s--){
+    var per=Math.floor((w+gap)/(s+gap));
+    if(per<1) continue;
+    var rows=Math.ceil(count/per);
+    if(rows*(s+gap)-gap<=h) return s;
+  }
+  return min;
+}
+var SZ={op:22,oa:30,my:24,ma:30,card:56};
+function computeSizes(V){
+  var opps=$('opps');
+  var cnt=Math.max(1,V.n-1);
+  /* เลย์เอาต์คู่แข่ง — คนน้อยได้พื้นที่เยอะ เต๋าใหญ่ */
+  var cols,rows;
+  if(cnt<=2){ cols=cnt; rows=1; }
+  else if(cnt===3){ cols=3; rows=1; }
+  else if(cnt===4){ cols=2; rows=2; }
+  else if(cnt<=6){ cols=3; rows=2; }
+  else if(cnt<=8){ cols=4; rows=2; }
+  else { cols=4; rows=3; }
+  opps.style.gridTemplateColumns='repeat('+cols+',minmax(0,1fr))';
+  opps.style.gridTemplateRows='repeat('+rows+',minmax(0,1fr))';
+
+  var W=opps.clientWidth||window.innerWidth;
+  var H=opps.clientHeight||Math.round(window.innerHeight*0.55);
+  var cw=(W-6*(cols+1))/cols;
+  var ch=(H-6*(rows+1))/rows;
+
+  /* พื้นที่ข้อความ (ชื่อ + คะแนน + มือ + อันดับ + ป้ายเหลือ) */
+  var textH=clamp(ch*0.30,50,104);
+  var free=Math.max(40,ch-textH-12);
+  var arenaH=free*0.40, poolH=free*0.60;
+
+  /* เต๋าในสังเวียน (3 ลูก + ไพ่) */
+  var oa=Math.round(clamp(Math.min(cw/4.9,arenaH*0.94),18,64));
+  /* เต๋าในกอง 11 ลูก — ใหญ่สุดเท่าที่ใส่ครบ */
+  var op=fitGrid(11,cw-10,poolH,Math.min(58,Math.round(oa*1.05)),12,4);
+
+  /* แผงของฉัน — เล็กกว่าเดิม เห็นครบ 11 ลูก */
+  var mineW=($('mine').clientWidth||window.innerWidth)-20;
+  var myPoolH=Math.min(window.innerHeight*0.135,110);
+  var my=fitGrid(11,mineW,myPoolH,32,13,4);
+  var ma=Math.round(clamp(my*1.2,20,38));
+  /* ไพ่ในแถบเลือก — พอดีจอ ไม่ล้น */
+  var cardH=Math.round(clamp(Math.min((mineW-70)/5/0.72, window.innerHeight*0.085),34,74));
+
+  SZ={op:op,oa:oa,my:my,ma:ma,card:cardH};
+}
+
+/* ==================== RENDER ==================== */
+var prevPhase='',prevStage=-1,prevTurn='',prevSeq=-1,lastSummaryRound=-1,endShown=false,sizePass=0;
+
+function render(){
+  if(!VIEW) return;
+  var V=VIEW;
+  $('menu').classList.add('hidden');
+  $('lobby').classList.add('hidden');
+  $('game').classList.remove('hidden');
+  computeSizes(V);
+
+  var pn={roll:'ทอยเต๋า',predict:'เลือกไพ่',select:'ลงเต๋าสู้',duel:'ดวลความใหญ่',
+          cardreveal:'เปิดไพ่',summary:'สรุปรอบ',end:'จบเกม'}[V.phase]||'';
+  $('hudMid').innerHTML='<span class="pill">รอบ '+V.bigRound+'/'+V.maxRounds+'</span>'+
+    '<span class="pill">ตา '+V.subRound+'/3</span><span class="pill hot">'+pn+'</span>'+
+    (V.code?'<span class="pill">'+V.code+'</span>':'');
+
+  var bn=$('banner');
+  if(bn.textContent!==V.banner){
+    bn.textContent=V.banner; bn.classList.remove('pop'); void bn.offsetWidth; bn.classList.add('pop');
+  }
+
+  var ordered=[],i,j;
+  if(V.order.length){
+    for(i=0;i<V.order.length;i++){
+      for(j=0;j<V.players.length;j++){ if(V.players[j].id===V.order[i]) ordered.push(V.players[j]); }
+    }
+  }
+  if(ordered.length!==V.players.length) ordered=V.players.slice();
+
+  var me=null,others=[];
+  for(i=0;i<ordered.length;i++){
+    if(ordered[i].id===V.me) me=ordered[i]; else others.push(ordered[i]);
+  }
+  var rankSorted=ordered.slice().sort(function(a,b){ return (a.lastRank||9)-(b.lastRank||9); });
+
+  var box=$('opps'); box.innerHTML='';
+  for(i=0;i<others.length;i++){ box.appendChild(buildOpp(others[i],V,rankSorted)); }
+
+  buildMine(me,V);
+
+  if(V.phase!=='summary'&&V.phase!=='end') $('summary').classList.add('hidden');
+
+  var key=V.phase+'/'+V.stage;
+  if(key!==prevPhase+'/'+prevStage){
+    if(V.phase==='roll'&&V.stage===0) SFX.roll();
+    if(V.phase==='roll'&&V.stage===1) SFX.settle();
+    if(V.phase==='duel'&&V.stage===1) SFX.unveil();
+    if(V.phase==='duel'&&V.stage===2) SFX.scan();
+    if(V.phase==='duel'&&V.stage===3){
+      (function(list){
+        for(var a=0;a<list.length;a++){ (function(x){ later(x*220,function(){ SFX.rank(x); }); })(a); }
+        later(list.length*220+120,function(){ SFX.coin(); });
+      })(rankSorted);
+      later(170,function(){
+        var tags=document.querySelectorAll('.ptsTag');
+        for(var t=0;t<tags.length;t++){
+          (function(node,idx){ later(idx*160,function(){ fxAt(node,node.textContent); }); })(tags[t],t);
+        }
+      });
+    }
+    if(V.phase==='cardreveal'&&V.stage===1){
+      SFX.card();
+      var any=false;
+      for(var h=0;h<V.players.length;h++){ if(V.players[h].cardHit) any=true; }
+      if(any) later(500,function(){ SFX.bonus(); });
+    }
+    if(V.phase==='predict') CARDSEL=null;
+    prevPhase=V.phase; prevStage=V.stage;
+  }
+  if(V.phase==='select'&&V.turnId!==prevTurn){ prevTurn=V.turnId; if(V.turnId===V.me) SFX.turn(); }
+  if(V.seq!==prevSeq){ prevSeq=V.seq; if(V.phase==='select') SFX.place(); }
+
+  if(sizePass<2){
+    sizePass++;
+    requestAnimationFrame(function(){ safe(function(){
+      var before=SZ.op+'_'+SZ.my+'_'+SZ.oa;
+      computeSizes(VIEW);
+      if(before!==SZ.op+'_'+SZ.my+'_'+SZ.oa) render();
+      sizePass=0;
+    }); });
+  }
+}
+
+function buildOpp(p,V,rankSorted){
+  var isR1=(V.phase==='duel'&&V.stage>=3&&p.lastRank===1);
+  var cls='pcol';
+  if(V.turnId===p.id) cls+=' turn';
+  if(!p.connected) cls+=' off';
+  if(isR1) cls+=' rank1';
+  var col=el('div',cls);
+  if(isR1){ col.appendChild(el('div','rays')); col.appendChild(el('div','crown','👑')); }
+
+  col.appendChild(el('div','pname',p.emoji+' '+p.name+(p.isBot?' 🤖':'')+(p.connected?'':' 📴')));
+  var meta=el('div','pmeta');
+  meta.innerHTML='รวม <b>'+fmt(p.total)+'</b> • รอบนี้ <b>'+fmt(p.roundScore)+'</b>';
+  col.appendChild(meta);
+
+  var row=el('div','rowc');
+  var cardH=Math.round(SZ.oa*1.18);
+  if(p.prediction){
+    var ex=(V.phase==='cardreveal'?'flip':'')+(p.cardHit?' hit':'');
+    row.appendChild(makeCard(p.prediction,cardH,ex));
+  } else row.appendChild(makeBack(cardH,!p.hasPrediction));
+
+  var arena=el('div','arena'+((V.phase==='duel'&&V.stage>=2)?' lit':''));
+  var placed=[],d;
+  for(d=0;d<p.dice.length;d++){ if(p.dice[d].pr===V.subRound) placed.push(p.dice[d]); }
+  for(d=0;d<3;d++){
+    if(placed[d]){
+      var e2='drop';
+      if(V.phase==='duel'&&V.stage>=1&&placed[d].secret) e2='unveil';
+      if(V.phase==='duel'&&V.stage>=2) e2+=' glow';
+      arena.appendChild(makeDie(placed[d],SZ.oa,e2));
+    } else arena.appendChild(makeSlot(SZ.oa));
+  }
+  row.appendChild(arena);
+  col.appendChild(row);
+
+  var showHand=((V.phase==='duel'&&V.stage>=2)||V.phase==='cardreveal');
+  col.appendChild(el('div','handTag'+(showHand?' show':''),showHand?(p.lastHand||''):''));
+
+  var rr=el('div','rankRow');
+  if(V.phase==='duel'&&V.stage>=3&&p.lastRank){
+    var idx=rankSorted.indexOf(p);
+    var rb=el('span','rbadge r'+Math.min(p.lastRank,4),'#'+p.lastRank);
+    rb.style.animationDelay=(idx*0.22)+'s';
+    var pt=el('span','ptsTag','+'+fmt(p.lastPts));
+    pt.style.animationDelay=(idx*0.22+0.15)+'s';
+    rr.appendChild(rb); rr.appendChild(pt);
+  }
+  col.appendChild(rr);
+
+  var pbox=el('div','poolBox'),pool=el('div','poolRow');
+  var remain=[],r2;
+  for(r2=0;r2<p.dice.length;r2++){ if(!p.dice[r2].used) remain.push(p.dice[r2]); }
+  for(r2=0;r2<remain.length;r2++){
+    pool.appendChild(makeDie(remain[r2],SZ.op,(V.phase==='roll'&&V.stage===0)?'roll':''));
+  }
+  pbox.appendChild(pool);
+  col.appendChild(pbox);
+  col.appendChild(el('div','leftTag','เหลือ '+remain.length+' ลูก'));
+  return col;
+}
+
+function buildMine(me,V){
+  var mine=$('mine'),head=$('myHead'),battle=$('myBattle');
+  var title=$('myTitle'),row=$('myRow'),btns=$('myBtns');
+  head.innerHTML=''; battle.innerHTML=''; row.innerHTML=''; btns.innerHTML='';
+  mine.classList.toggle('turn',V.turnId===V.me);
+  if(!me){ title.textContent='👀 กำลังชม...'; return; }
+
+  var remain=[],i;
+  for(i=0;i<me.dice.length;i++){ if(!me.dice[i].used) remain.push(me.dice[i]); }
+
+  head.innerHTML='<span>'+me.emoji+' <b>'+me.name+'</b></span>'+
+    '<span class="pill">รวม '+fmt(me.total)+'</span>'+
+    '<span class="pill">รอบนี้ '+fmt(me.roundScore)+'</span>'+
+    '<span class="pill tq">เหลือ '+remain.length+' ลูก</span>';
+
+  var mCardH=Math.round(SZ.ma*1.18);
+  if(me.prediction){
+    var ex=(V.phase==='cardreveal'?'flip':'')+(me.cardHit?' hit':'');
+    battle.appendChild(makeCard(me.prediction,mCardH,ex));
+  } else battle.appendChild(makeBack(mCardH,!me.hasPrediction));
+
+  var arena=el('div','arena'+((V.phase==='duel'&&V.stage>=2)?' lit':''));
+  var placed=[],d;
+  for(d=0;d<me.dice.length;d++){ if(me.dice[d].pr===V.subRound) placed.push(me.dice[d]); }
+  for(d=0;d<3;d++){
+    if(placed[d]){
+      var e2='drop';
+      if(V.phase==='duel'&&V.stage>=1&&placed[d].secret) e2='unveil';
+      if(V.phase==='duel'&&V.stage>=2) e2+=' glow';
+      arena.appendChild(makeDie(placed[d],SZ.ma,e2));
+    } else arena.appendChild(makeSlot(SZ.ma));
+  }
+  battle.appendChild(arena);
+  if((V.phase==='duel'&&V.stage>=2)||V.phase==='cardreveal'){
+    battle.appendChild(el('div','handTag show',me.lastHand||''));
+  }
+  if(V.phase==='duel'&&V.stage>=3&&me.lastRank){
+    battle.appendChild(el('span','rbadge r'+Math.min(me.lastRank,4),'#'+me.lastRank));
+    battle.appendChild(el('span','ptsTag','+'+fmt(me.lastPts)));
+  }
+
+  /* ---------- PHASE CONTENT ---------- */
+  if(V.phase==='roll'){
+    title.textContent=(V.stage===0)?'🎲 กำลังทอยเต๋า 11 ลูก...':'👀 เต๋าของคุณ — 🔵 คือเต๋าลับ (คนอื่นไม่เห็น)';
+    for(i=0;i<me.dice.length;i++){
+      var dd=makeDie(me.dice[i],SZ.my,(V.stage===0)?'roll':'settle');
+      if(V.stage===1) dd.style.animationDelay=(i*0.05)+'s';
+      row.appendChild(dd);
+    }
+  }
+  else if(V.phase==='predict'){
+    /* เต๋าของฉันยังแสดงครบ + แถบไพ่บางอยู่ล่างสุด ไม่บังเต๋า */
+    for(i=0;i<me.dice.length;i++){ row.appendChild(makeDie(me.dice[i],SZ.my,'')); }
+    if(me.prediction){
+      title.textContent='✅ เลือกไพ่ '+CF[me.prediction]+' ('+CNAME[me.prediction]+') แล้ว — รอผู้เล่นคนอื่น...';
+    } else {
+      title.textContent='🃏 ดูเต๋าทุกคนด้านบน แล้วเลือกไพ่ทำนายคะแนนรวม 3 ตาของคุณ';
+      var strip=el('div','cardStrip'); strip.id='cardStrip';
+      for(i=0;i<CARDS.length;i++){
+        (function(code){
+          var slot=el('div','cslot'+(CARDSEL===code?' on':''));
+          slot.appendChild(makeCard(code,SZ.card));
+          slot.appendChild(el('div','cname',CNAME[code]+' '+V.ranges[code].label));
+          slot.addEventListener('click',function(){
+            safe(function(){
+              SFX.click();
+              CARDSEL=(CARDSEL===code)?null:code;
+              render();
+            });
+          });
+          strip.appendChild(slot);
+        })(CARDS[i]);
+      }
+      btns.appendChild(strip);
+      var desc=el('div','','');
+      desc.id='cardDesc';
+      desc.textContent = CARDSEL ? V.ranges[CARDSEL].desc : 'แตะไพ่เพื่อดูรายละเอียด แล้วกดยืนยัน';
+      btns.appendChild(desc);
+      var ok=el('button','btn gold'+(CARDSEL?' rdy':''), CARDSEL?('✅ ยืนยันไพ่ '+CF[CARDSEL]):'เลือกไพ่ก่อน');
+      ok.type='button'; ok.disabled=!CARDSEL;
+      ok.addEventListener('click',function(){
+        safe(function(){
+          if(!CARDSEL) return;
+          SFX.card(); fxAt(ok,'🃏');
+          var c=CARDSEL; CARDSEL=null;
+          act({type:'predict',card:c});
+        });
+      });
+      btns.appendChild(ok);
+    }
+  }
+  else if(V.phase==='select'){
+    var myTurn=(V.turnId===V.me),usedMap={},k;
+    for(k=0;k<me.dice.length;k++){ if(me.dice[k].used) usedMap[me.dice[k].id]=1; }
+    var keep=[];
+    for(k=0;k<SEL.length;k++){ if(!usedMap[SEL[k]]&&keep.indexOf(SEL[k])<0) keep.push(SEL[k]); }
+    SEL=keep;
+
+    var who='?';
+    for(k=0;k<V.players.length;k++){ if(V.players[k].id===V.turnId) who=V.players[k].emoji+' '+V.players[k].name; }
+    title.textContent=myTurn?('👉 ตาคุณ! แตะเลือกเต๋า 3 ลูก ('+SEL.length+'/3)'):('⏳ รอ '+who+' ลงเต๋า...');
+
+    for(k=0;k<remain.length;k++){
+      (function(die){
+        var extra=(myTurn?'pick ':'')+((SEL.indexOf(die.id)>=0)?'sel':'');
+        var node=makeDie(die,SZ.my,extra);
+        if(myTurn){
+          node.addEventListener('click',function(){
+            safe(function(){
+              SFX.click();
+              var pos=SEL.indexOf(die.id);
+              if(pos>=0) SEL.splice(pos,1);
+              else if(SEL.length<3) SEL.push(die.id);
+              render();
+            });
+          });
+        }
+        row.appendChild(node);
+      })(remain[k]);
+    }
+
+    var btn=el('button','btn gold'+((myTurn&&SEL.length===3)?' rdy':''),'🎯 ลงเต๋าสู้ ('+SEL.length+'/3)');
+    btn.type='button'; btn.disabled=!(myTurn&&SEL.length===3);
+    btn.addEventListener('click',function(){
+      safe(function(){
+        SFX.place(); fxAt(btn,'⚔️','#a8f7eb');
+        var ids=SEL.slice(); SEL=[];
+        act({type:'place',ids:ids});
+      });
+    });
+    btns.appendChild(btn);
+
+    if(myTurn&&SEL.length===3){
+      var vals=[],ok2=true;
+      for(k=0;k<3;k++){ var dv=me.dice[SEL[k]]; if(!dv){ok2=false;break;} vals.push(dv.v); }
+      if(ok2) btns.appendChild(el('span','pill tq','มือนี้: '+evalHand(vals).name));
+    }
+    if(myTurn&&SEL.length>0){
+      var clr=el('button','btn sm','✖ ล้าง'); clr.type='button';
+      clr.addEventListener('click',function(){ safe(function(){ SEL=[]; SFX.click(); render(); }); });
+      btns.appendChild(clr);
+    }
+  }
+  else if(V.phase==='duel'){
+    var msgs=['⚔️ เตรียมดวล...','𓂀 เปิดเต๋าลับทั้งหมด!','🔍 อ่านความใหญ่...','🏆 ประกาศอันดับ!'];
+    title.textContent=msgs[V.stage]||'';
+    if(remain.length){ for(i=0;i<remain.length;i++){ row.appendChild(makeDie(remain[i],SZ.my,'')); } }
+    else row.appendChild(el('span','hint','เต๋าถูกใช้หมดแล้วในรอบนี้'));
+  }
+  else if(V.phase==='cardreveal'){
+    title.textContent=me.cardHit
+      ? ('✨ คุณทายถูก! '+(me.prediction==='JOKER'?'+50 คะแนน':'คะแนน ×2'))
+      : '😵 คุณทายผิด — ได้คะแนนเท่าเดิม';
+    for(i=0;i<remain.length;i++){ row.appendChild(makeDie(remain[i],SZ.my,'')); }
+  }
+  else if(V.phase==='summary'){ title.textContent='📜 สรุปผลรอบ'; showSummary(V); }
+  else if(V.phase==='end'){ title.textContent='👑 จบเกม'; showEnd(V); }
+}
+
+function showSummary(V){
+  var s=V.summary; if(!s) return;
+  var ov=$('summary'),sh=$('summarySheet');
+  if(lastSummaryRound!==s.round){ lastSummaryRound=s.round; SFX.fanfare(); }
+  var nx={name:'?',emoji:'',isBot:false,connected:true},i;
+  for(i=0;i<V.players.length;i++){ if(V.players[i].id===s.nextFirst) nx=V.players[i]; }
+  var iAm=(V.me===s.nextFirst);
+  var isAuto=nx.isBot||!nx.connected;
+  var isLast=(V.bigRound>=V.maxRounds);
+  var rows=s.rows.slice().sort(function(a,b){ return b.total-a.total; }),html='';
+  for(i=0;i<rows.length;i++){
+    var x=rows[i];
+    html+='<tr class="'+(x.id===V.me?'me':'')+'">'+
+      '<td>'+x.emoji+' '+x.name+'</td>'+
+      '<td>'+x.sub.map(fmt).join(' + ')+'</td>'+
+      '<td><b>'+fmt(x.round)+'</b></td>'+
+      '<td>'+CF[x.card]+' <span style="font-size:.8em;opacity:.75">'+s.ranges[x.card].label+'</span></td>'+
+      '<td class="'+(x.hit?'ok':'no')+'">'+(x.hit?(x.card==='JOKER'?'ถูก! +50':'ถูก! ×2'):'ผิด')+'</td>'+
+      '<td><b style="color:#ffe085">'+fmt(x.final)+'</b></td>'+
+      '<td><b>'+fmt(x.total)+'</b></td></tr>';
+  }
+  var footer;
+  if(iAm){
+    footer='<button class="btn gold rdy" type="button" id="bNextRound">'+
+      (isLast?'👑 ดูผลรวมสุดท้าย':'▶️ เริ่มรอบที่ '+(s.round+1))+'</button>'+
+      (V.autoIn>0?'<div class="hint" style="margin-top:6px">เริ่มอัตโนมัติใน <span class="cdown">'+V.autoIn+'</span> วิ</div>':'');
+  } else if(isAuto){
+    footer='<span class="hint">🤖 '+nx.emoji+' '+nx.name+' กำลังเริ่มรอบต่อไป... <span class="cdown">'+(V.autoIn||0)+'</span> วิ</span>';
+  } else {
+    footer='<span class="hint">⏳ รอ '+nx.emoji+' '+nx.name+' กดเริ่มรอบต่อไป'+(V.autoIn>0?(' ('+V.autoIn+' วิ)'):'')+'</span>';
+  }
+  sh.innerHTML='<h2>📜 สรุปรอบใหญ่ที่ '+s.round+' / '+V.maxRounds+'</h2>'+
+    '<table><tr><th>ผู้เล่น</th><th>คะแนน 3 ตา</th><th>รวมรอบ</th><th>ไพ่</th><th>ผล</th><th>ได้จริง</th><th>สะสม</th></tr>'+html+'</table>'+
+    '<p style="text-align:center">'+(isLast?'🏁 รอบสุดท้ายจบแล้ว':'ผู้เล่นคนแรกของรอบต่อไป: <b>'+nx.emoji+' '+nx.name+'</b>')+'</p>'+
+    '<div style="text-align:center;margin-top:.8vh">'+footer+'</div>';
+  ov.classList.remove('hidden');
+  var nb=$('bNextRound');
+  if(nb) nb.addEventListener('click',function(){ safe(function(){ SFX.click(); ov.classList.add('hidden'); act({type:'next'}); }); });
+}
+function showEnd(V){
+  var ov=$('summary'),sh=$('summarySheet'),f=V.final||[],medal=['🥇','🥈','🥉'],html='',i;
+  for(i=0;i<f.length;i++){
+    html+='<tr class="'+(f[i].id===V.me?'me':'')+'"><td>'+(medal[i]||(i+1))+'</td>'+
+          '<td>'+f[i].emoji+' '+f[i].name+'</td><td><b>'+fmt(f[i].total)+'</b></td></tr>';
+  }
+  sh.innerHTML='<h2>👑 ผลรวมสุดท้าย 👑</h2>'+
+    '<table><tr><th>อันดับ</th><th>ผู้เล่น</th><th>คะแนนรวม</th></tr>'+html+'</table>'+
+    '<p style="text-align:center">𓂀 '+(f[0]?(f[0].emoji+' '+f[0].name+' คือฟาโรห์ผู้ครองสมบัติ!'):'')+' 𓂀</p>'+
+    '<div style="text-align:center;margin-top:1vh"><button class="btn gold" type="button" id="bAgain">🔄 กลับหน้าเมนู</button></div>';
+  ov.classList.remove('hidden');
+  var ag=$('bAgain');
+  if(ag) ag.addEventListener('click',function(){ location.reload(); });
+  if(!endShown){ endShown=true; SFX.fanfare(); }
+}
+
+/* ==================== NETWORK ==================== */
+var PREFIX='TDICE8X-';
+function genCode(){ var A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',c='',i; for(i=0;i<5;i++){c+=A[rnd(A.length)];} return c; }
+function setStatus(m,c){ var e=$('netStatus'); e.textContent=m; e.className='status '+(c||''); }
+function setLS(m,c){ var e=$('lobbyStatus'); e.textContent=m; e.className='status '+(c||''); }
+function peerOpts(){ return {debug:0,config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'}]}}; }
+function hasPeer(){ return typeof window.Peer!=='undefined'; }
+
+function createRoom(name){
+  if(!hasPeer()){ setStatus('❌ โหลดระบบเชื่อมต่อไม่ได้ — โหมดเล่นคนเดียวยังใช้ได้','err'); return; }
+  setStatus('⏳ กำลังสร้างห้อง...');
+  ROOMCODE=genCode(); ROLE='host'; MYID='H';
+  try{ peer=new Peer(PREFIX+ROOMCODE,peerOpts()); }catch(e){ setStatus('❌ '+e.message,'err'); return; }
+  peer.on('open',function(){
+    safe(function(){
+      var h=newPlayer('H',name,false,0); h.isHost=true;
+      hostInit([h]); showLobby();
+      setLS('✅ ห้องพร้อม! ส่งรหัสให้เพื่อน หรือกดเพิ่มบอทเพื่อทดสอบ','ok');
+    });
+  });
+  peer.on('error',function(e){
+    if(e.type==='unavailable-id'){
+      setStatus('รหัสซ้ำ กำลังสุ่มใหม่...');
+      try{peer.destroy();}catch(x){}
+      later(350,function(){ createRoom(name); });
+    } else setStatus('❌ '+e.type+': '+e.message,'err');
+  });
+  peer.on('connection',function(conn){
+    conn.on('open',function(){
+      conn.on('data',function(d){ safe(function(){ onHostData(conn,d); }); });
+      conn.on('close',function(){ safe(function(){ onPeerGone(conn); }); });
+      conn.on('error',function(){ safe(function(){ onPeerGone(conn); }); });
+    });
+  });
+}
+function onHostData(conn,d){
+  if(!G||!d) return;
+  if(d.t==='join'){
+    var nm=String(d.name||'ผู้เล่น').slice(0,12),rejoin=null,i;
+    for(i=0;i<G.players.length;i++){ if(G.players[i].name===nm&&!G.players[i].connected) rejoin=G.players[i]; }
+    if(rejoin){
+      rejoin.connected=true; rejoin.isBot=false; rejoin.conn=conn; conn._pid=rejoin.id;
+      conn.send({t:'joined',id:rejoin.id,code:ROOMCODE});
+      setLS(nm+' กลับเข้าเกมแล้ว ✅','ok');
+      renderLobby(); push(); return;
+    }
+    if(G.phase!=='lobby'){ conn.send({t:'denied',why:'เกมเริ่มไปแล้ว'}); return; }
+    if(G.players.length>=10){ conn.send({t:'denied',why:'ห้องเต็ม (10 คน)'}); return; }
+    for(i=0;i<G.players.length;i++){
+      if(G.players[i].name===nm){ conn.send({t:'denied',why:'ชื่อซ้ำ กรุณาเปลี่ยนชื่อ'}); return; }
+    }
+    var id='P'+Date.now().toString(36)+rnd(99);
+    var np=newPlayer(id,nm,false,G.players.length);
+    np.conn=conn; G.players.push(np); conn._pid=id;
+    conn.send({t:'joined',id:id,code:ROOMCODE});
+    renderLobby(); SFX.card();
+  } else if(d.t==='action'){ if(conn._pid) handleAction(conn._pid,d.a); }
+}
+function onPeerGone(conn){
+  if(!G||!conn._pid) return;
+  var p=P(conn._pid); if(!p||!p.connected) return;
+  p.connected=false; p.conn=null;
+  toast('📴 '+p.name+' หลุด — auto-stay เกมเดินต่อ');
+  setLS(p.name+' หลุด — ระบบเล่นแทน (กลับเข้าด้วยชื่อเดิมได้)','err');
+  renderLobby();
+  if(G.phase==='predict'&&!p.prediction){ p.prediction='J'; push(); checkPredict(); return; }
+  if(G.phase==='select'&&curTurn()===p.id){ later(800,function(){ placeDice(p.id,botChoose(p)); }); }
+  if(G.phase==='summary'){ armAutoNext(); return; }
+  if(G.phase!=='lobby') push();
+}
+function broadcastLobby(){
+  if(ROLE!=='host'||!G) return;
+  var list=[],i;
+  for(i=0;i<G.players.length;i++){
+    list.push({name:G.players[i].name,emoji:G.players[i].emoji,connected:G.players[i].connected,isBot:G.players[i].isBot});
+  }
+  for(i=0;i<G.players.length;i++){
+    if(G.players[i].conn){ try{ G.players[i].conn.send({t:'lobby',list:list,code:ROOMCODE}); }catch(e){} }
+  }
+}
+function joinRoom(name,code){
+  if(!hasPeer()){ setStatus('❌ โหลดระบบเชื่อมต่อไม่ได้ — ลองรีเฟรชหน้า','err'); return; }
+  code=String(code||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if(code.length!==5){ setStatus('❌ รหัสต้องมี 5 ตัวอักษร','err'); return; }
+  ROLE='client'; ROOMCODE=code;
+  setStatus('⏳ กำลังเชื่อมต่อห้อง '+code+'...');
+  try{ peer=new Peer(peerOpts()); }catch(e){ setStatus('❌ '+e.message,'err'); return; }
+  var done=false;
+  peer.on('open',function(){
+    hostConn=peer.connect(PREFIX+code,{reliable:true});
+    var timer=setTimeout(function(){
+      if(!done) setStatus('❌ เชื่อมต่อไม่สำเร็จ — ตรวจรหัส หรือโฮสต์อาจปิดหน้าเว็บ','err');
+    },9000);
+    hostConn.on('open',function(){
+      done=true; clearTimeout(timer);
+      hostConn.send({t:'join',name:name});
+      setStatus('✅ เชื่อมต่อแล้ว','ok');
+    });
+    hostConn.on('data',function(d){ safe(function(){ onClientData(d); }); });
+    hostConn.on('close',function(){
+      toast('📴 หลุดจากโฮสต์ — กำลังเชื่อมใหม่');
+      later(1600,function(){ joinRoom(name,code); });
+    });
+    hostConn.on('error',function(){ setStatus('❌ ข้อผิดพลาดการเชื่อมต่อ','err'); });
+  });
+  peer.on('error',function(e){
+    setStatus(e.type==='peer-unavailable'?'❌ ไม่พบห้องนี้ — ตรวจรหัสอีกครั้ง':('❌ '+e.type),'err');
+  });
+}
+function onClientData(d){
+  if(!d) return;
+  if(d.t==='joined'){ MYID=d.id; ROOMCODE=d.code; showLobby(); setLS('✅ เข้าห้องแล้ว รอโฮสต์เริ่มเกม','ok'); }
+  else if(d.t==='denied'){
+    setStatus('❌ '+d.why,'err'); ROLE='none';
+    $('lobby').classList.add('hidden'); $('menu').classList.remove('hidden');
+  }
+  else if(d.t==='lobby'){ ROOMCODE=d.code; renderLobbyList(d.list); }
+  else if(d.t==='state'){ VIEW=d.s; render(); }
+}
+function showLobby(){
+  $('menu').classList.add('hidden'); $('game').classList.add('hidden'); $('lobby').classList.remove('hidden');
+  $('lobbyCode').textContent=ROOMCODE;
+  $('bStart').classList.toggle('hidden',ROLE!=='host');
+  $('bAddBot').classList.toggle('hidden',ROLE!=='host');
+  renderLobby();
+}
+function renderLobby(){
+  if(ROLE==='host'&&G){
+    var list=[],i;
+    for(i=0;i<G.players.length;i++){
+      list.push({name:G.players[i].name,emoji:G.players[i].emoji,connected:G.players[i].connected,isBot:G.players[i].isBot});
+    }
+    renderLobbyList(list);
+  }
+  broadcastLobby();
+}
+function renderLobbyList(list){
+  var html='',i;
+  for(i=0;i<list.length;i++){
+    html+='<div class="pchip'+(list[i].connected?'':' off')+'">'+list[i].emoji+' '+list[i].name+(list[i].isBot?' 🤖':'')+'</div>';
+  }
+  $('lobbyList').innerHTML=html;
+  if(ROLE==='host') $('bStart').disabled=(list.length<2);
+}
+function copyText(txt,ok){
+  function fb(){
+    try{
+      var ta=document.createElement('textarea');
+      ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+      document.body.removeChild(ta); toast(ok);
+    }catch(e){ toast('คัดลอกไม่ได้ — '+txt); }
+  }
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(function(){toast(ok);},fb);
+  else fb();
+}
+function startSolo(name,bots){
+  ROLE='local'; MYID='H'; ROOMCODE='';
+  var ps=[newPlayer('H',name,false,0)];
+  var pool=NAMES.slice().sort(function(){ return Math.random()-0.5; }),i;
+  for(i=0;i<bots;i++){ ps.push(newPlayer('B'+i,pool[i%pool.length],true,i+1)); }
+  hostInit(ps); startGame();
+}
+
+/* ==================== INIT ==================== */
+function openRules(n){
+  n=n||4;
+  var pts=pointsTable(n),r=cardRanges(n),txt=[],i;
+  for(i=0;i<pts.length;i++){ txt.push('#'+(i+1)+' = '+pts[i]); }
+  var keys=['K','Q','J','A','JOKER'],rowsTxt='';
+  for(i=0;i<keys.length;i++){ rowsTxt+='<tr><td>ไพ่ '+CF[keys[i]]+' ('+CNAME[keys[i]]+')</td><td>'+r[keys[i]].label+'</td></tr>'; }
+  $('ruleScale').innerHTML='<table><tr><th colspan="2">ตารางคะแนนสำหรับ '+n+' คน</th></tr>'+
+    '<tr><td>อันดับเต๋า</td><td>'+txt.join(' • ')+'</td></tr>'+rowsTxt+'</table>';
+  $('rules').classList.remove('hidden');
+}
+var botPick=3;
+function buildChips(){
+  var box=$('botChips'); box.innerHTML='';
+  for(var i=1;i<=9;i++){
+    (function(num){
+      var b=el('button','btn chip'+(num===botPick?' on':''),String(num));
+      b.type='button';
+      b.addEventListener('click',function(){ safe(function(){ botPick=num; SFX.click(); buildChips(); }); });
+      box.appendChild(b);
+    })(i);
+  }
+  var n=botPick+1,p=pointsTable(n),r=cardRanges(n);
+  $('botInfo').innerHTML='ผู้เล่นทั้งหมด <b>'+n+' คน</b> • คะแนนอันดับ: '+p.join(' / ')+
+    '<br>K '+r.K.label+' • Q '+r.Q.label+' • J '+r.J.label+' • A '+r.A.label;
+}
+function initDust(){
+  var bg=$('bg'),i;
+  for(i=0;i<16;i++){
+    var d=el('div','dust');
+    var s=1+Math.random()*3;
+    d.style.width=s+'px'; d.style.height=s+'px';
+    d.style.left=(70+Math.random()*40)+'%';
+    d.style.bottom=(Math.random()*45)+'%';
+    d.style.animationDuration=(14+Math.random()*20)+'s';
+    d.style.animationDelay=(-Math.random()*30)+'s';
+    bg.appendChild(d);
+  }
+}
+function getName(fb){
+  var v=($('nameIn').value||'').trim().slice(0,12);
+  if(!v) v=fb;
+  try{ localStorage.setItem('td_name',v); }catch(e){}
+  return v;
+}
+document.addEventListener('DOMContentLoaded',function(){
+  safe(initDust);
+  safe(buildChips);
+  try{ $('nameIn').value=localStorage.getItem('td_name')||('ผู้เล่น'+rnd(99)); }
+  catch(e){ $('nameIn').value='ผู้เล่น'+rnd(99); }
+
+  bind('bMusic',function(){ SFX.click(); setMusic(!musicOn); });
+  bind('bMusic2',function(){ SFX.click(); setMusic(!musicOn); });
+  bind('bRules',function(){ SFX.click(); openRules(4); });
+  bind('bRules2',function(){ SFX.click(); openRules(VIEW?VIEW.n:4); });
+  bind('bCloseRules',function(){ SFX.click(); $('rules').classList.add('hidden'); });
+
+  bind('bSolo',function(){ ac(); SFX.click(); $('soloPick').classList.remove('hidden'); buildChips(); });
+  bind('bSoloCancel',function(){ SFX.click(); $('soloPick').classList.add('hidden'); });
+  bind('bSoloGo',function(){
+    ac(); SFX.click();
+    var nm=getName('ผู้เล่น'+rnd(99));
+    $('soloPick').classList.add('hidden');
+    if(!musicOn) setMusic(true);
+    startSolo(nm,botPick);
+  });
+
+  bind('bHost',function(){ ac(); SFX.click(); createRoom(getName('โฮสต์')); });
+  bind('bJoin',function(){ ac(); SFX.click(); joinRoom(getName('ผู้เล่น'+rnd(99)),$('codeIn').value); });
+  bind('bStart',function(){
+    SFX.click();
+    if(ROLE!=='host'||!G) return;
+    if(G.players.length<2){ toast('ต้องมีอย่างน้อย 2 คน — กดเพิ่มบอทได้'); return; }
+    if(!musicOn) setMusic(true);
+    startGame();
+  });
+  bind('bAddBot',function(){
+    SFX.click();
+    if(ROLE!=='host'||!G||G.phase!=='lobby') return;
+    if(G.players.length>=10){ toast('ห้องเต็มแล้ว (10 คน)'); return; }
+    var pool=NAMES.slice().sort(function(){ return Math.random()-0.5; });
+    var nm=pool[0],i;
+    for(i=0;i<G.players.length;i++){ if(G.players[i].name===nm) nm=nm+rnd(9); }
+    G.players.push(newPlayer('B'+Date.now().toString(36),nm,true,G.players.length));
+    renderLobby();
+  });
+  bind('bLeave',function(){ location.reload(); });
+  bind('bCopyCode',function(){ copyText(ROOMCODE,'📋 คัดลอกรหัสแล้ว: '+ROOMCODE); });
+  bind('bCopyLink',function(){ copyText(location.href.split('?')[0]+'?room='+ROOMCODE,'🔗 คัดลอกลิงก์แล้ว'); });
+
+  var q=null;
+  try{ q=new URLSearchParams(location.search).get('room'); }catch(e){}
+  if(q){
+    $('codeIn').value=String(q).toUpperCase();
+    setStatus('🔗 พบรหัสห้อง '+String(q).toUpperCase()+' — ใส่ชื่อแล้วกด "เข้าร่วม"','ok');
+  }
+
+  window.addEventListener('resize',function(){ if(VIEW) safe(render); });
+  document.addEventListener('pointerdown',function(){ ac(); },{once:true});
+  window.addEventListener('error',function(e){ toast('⚠️ '+e.message); });
+  console.log('Tripple Dice ready ✔');
+});
+window.addEventListener('beforeunload',function(e){
+  if(ROLE==='host'&&G&&G.phase!=='lobby'){ e.preventDefault(); e.returnValue=''; }
+});
+</script>
+</body>
+</html>
